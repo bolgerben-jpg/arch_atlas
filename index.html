@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ArchAtlas | The Global Architecture Discovery Platform</title>
+    <title>ArchAtlas | The World's Architecture Platform</title>
     
     <!-- Core Libraries -->
     <script src="https://cdn.tailwindcss.com"></script>
@@ -17,312 +17,510 @@
     <link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,600;1,6..72,400&family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     
     <style>
-        /* Base Styling */
-        body { font-family: 'Outfit', sans-serif; background-color: #FAFAFA; color: #171717; overflow-x: hidden; scroll-behavior: smooth; }
+        /* Base & Reset */
+        body { font-family: 'Outfit', sans-serif; background-color: #FAFAFA; color: #171717; overflow: hidden; }
         .serif { font-family: 'Newsreader', serif; }
         
-        /* Map UI Overrides for Premium Look */
+        /* Map Overrides */
         #map { width: 100%; height: 100%; z-index: 10; background: #e5e5e5; }
         .leaflet-popup-content-wrapper { border-radius: 12px; padding: 0; overflow: hidden; box-shadow: 0 20px 40px rgba(0,0,0,0.15); border: 1px solid rgba(0,0,0,0.05); }
         .leaflet-popup-content { margin: 0; width: 280px !important; }
-        .leaflet-popup-tip-container { display: none; } /* Hide the default map pointer for a cleaner floating card look */
+        .leaflet-popup-tip-container { display: none; }
         .leaflet-control-zoom { border: none !important; box-shadow: 0 10px 20px rgba(0,0,0,0.1) !important; }
         .leaflet-control-zoom a { color: #171717 !important; background: rgba(255,255,255,0.9) !important; backdrop-filter: blur(8px); border: none !important; }
 
-        /* Glassmorphism Panels */
+        /* UI Elements */
         .glass-panel { background: rgba(255, 255, 255, 0.85); backdrop-filter: blur(16px); border: 1px solid rgba(255,255,255,0.5); }
         .dark-glass { background: rgba(15, 23, 42, 0.85); backdrop-filter: blur(16px); border: 1px solid rgba(255,255,255,0.1); }
         
         /* SPA View Transitions */
-        .view-section { display: none; opacity: 0; transition: opacity 0.3s ease-in-out; }
-        .view-section.active { display: block; opacity: 1; animation: slideUp 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
+        .view-section { display: none; opacity: 0; transition: opacity 0.3s ease-in-out; height: 100%; overflow-y: auto; }
+        .view-section.active { display: block; opacity: 1; animation: slideUp 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
         @keyframes slideUp { 0% { opacity: 0; transform: translateY(15px); } 100% { opacity: 1; transform: translateY(0); } }
-
-        /* Custom Range Slider */
-        input[type=range] { -webkit-appearance: none; background: transparent; width: 100%; }
-        input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; height: 16px; width: 16px; border-radius: 50%; background: #000; cursor: pointer; margin-top: -6px; box-shadow: 0 0 0 4px rgba(255,255,255,0.8); transition: transform 0.1s; }
-        input[type=range]::-webkit-slider-thumb:hover { transform: scale(1.2); }
-        input[type=range]::-webkit-slider-runnable-track { width: 100%; height: 4px; cursor: pointer; background: #cbd5e1; border-radius: 2px; }
 
         /* Custom Scrollbar */
         ::-webkit-scrollbar { width: 6px; }
         ::-webkit-scrollbar-track { background: transparent; }
         ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
         ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+
+        /* Sliders */
+        input[type=range] { -webkit-appearance: none; background: transparent; width: 100%; }
+        input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; height: 16px; width: 16px; border-radius: 50%; background: #000; cursor: pointer; margin-top: -6px; box-shadow: 0 0 0 4px rgba(255,255,255,0.8); transition: transform 0.1s; }
+        input[type=range]::-webkit-slider-runnable-track { width: 100%; height: 4px; cursor: pointer; background: #cbd5e1; border-radius: 2px; }
+
+        /* Modals */
+        .modal-overlay { display: none; opacity: 0; transition: opacity 0.3s ease; backdrop-filter: blur(8px); }
+        .modal-overlay.active { display: flex; opacity: 1; }
+        .modal-content { transform: scale(0.95); transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1); }
+        .modal-overlay.active .modal-content { transform: scale(1); }
+
+        /* 3D CAD Simulation Grid */
+        .cad-bg {
+            background-color: #0f172a;
+            background-image: 
+                linear-gradient(rgba(255,255,255,0.05) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(255,255,255,0.05) 1px, transparent 1px);
+            background-size: 20px 20px;
+        }
     </style>
 </head>
-<body class="h-screen flex flex-col overflow-hidden">
+<body class="flex flex-col h-screen">
 
     <!-- GLOBAL TOP BANNER -->
-    <div class="hidden md:flex w-full bg-slate-900 text-white justify-center items-center py-2 relative z-50 text-[11px] font-medium tracking-wide">
+    <div onclick="openModal('modal-pro')" class="hidden md:flex w-full bg-slate-900 text-white justify-center items-center py-2 relative z-50 text-[11px] font-medium tracking-wide cursor-pointer hover:bg-slate-800 transition-colors">
         <span class="bg-blue-600 text-white px-2 py-0.5 rounded-sm uppercase font-bold tracking-widest text-[9px] mr-3">Pro Feature</span>
-        ArchAtlas Educator Pro is now live. Overlay topological constraints and climate data directly on the map. <a href="#" class="ml-2 underline hover:text-blue-400">Upgrade your institution.</a>
+        ArchAtlas Educator Pro is now live. Overlay topological constraints and climate data directly on the map. <span class="ml-2 underline text-blue-400">Upgrade your institution.</span>
     </div>
 
     <!-- MAIN NAVIGATION -->
     <nav class="bg-white/90 backdrop-blur-md border-b border-gray-200 z-50 relative shrink-0">
         <div class="max-w-[1800px] mx-auto px-6 h-16 flex justify-between items-center">
-            <div class="flex items-center gap-3 cursor-pointer" onclick="switchView('view-map')">
+            <div class="flex items-center gap-3 cursor-pointer" onclick="navigate('view-map')">
                 <div class="w-8 h-8 bg-black text-white flex items-center justify-center rounded shadow-md">
                     <i data-lucide="map" class="w-4 h-4"></i>
                 </div>
-                <span class="text-xl font-bold tracking-tighter uppercase">ArchAtlas</span>
+                <span class="text-xl font-bold tracking-tighter uppercase hidden sm:block">ArchAtlas</span>
             </div>
             
             <div class="hidden lg:flex gap-10 text-[11px] font-bold uppercase tracking-[0.2em] text-gray-500">
-                <button onclick="switchView('view-map')" id="nav-map" class="text-black transition-colors">Global Map</button>
-                <button onclick="switchView('view-grid')" id="nav-grid" class="hover:text-black transition-colors">The Database</button>
-                <button onclick="alert('Architect Directory coming in V2!')" class="hover:text-black transition-colors">Architects</button>
+                <button onclick="navigate('view-map')" class="nav-link active text-black hover:text-black transition-colors" data-target="view-map">Global Map</button>
+                <button onclick="navigate('view-grid')" class="nav-link hover:text-black transition-colors" data-target="view-grid">Database</button>
+                <button onclick="navigate('view-architects')" class="nav-link hover:text-black transition-colors" data-target="view-architects">Architects</button>
+                <button onclick="navigate('view-collections')" class="nav-link hover:text-black transition-colors" data-target="view-collections">Collections</button>
             </div>
 
             <div class="flex items-center gap-4">
-                <button class="text-gray-400 hover:text-black"><i data-lucide="search" class="w-5 h-5"></i></button>
+                <button onclick="navigate('view-saved')" class="text-gray-400 hover:text-black relative group">
+                    <i data-lucide="bookmark" class="w-5 h-5"></i>
+                    <span id="saved-badge" class="absolute -top-1 -right-1 bg-blue-600 text-white text-[8px] font-bold w-3.5 h-3.5 rounded-full flex items-center justify-center hidden">0</span>
+                </button>
                 <div class="w-px h-5 bg-gray-300 mx-2 hidden md:block"></div>
-                <button class="text-[11px] bg-black text-white px-5 py-2 font-bold uppercase tracking-widest rounded-sm hover:bg-gray-800 transition-colors shadow-lg">Sign In</button>
+                <button onclick="openModal('modal-auth')" class="text-[11px] bg-black text-white px-5 py-2 font-bold uppercase tracking-widest rounded-sm hover:bg-gray-800 transition-colors shadow-lg">Sign In</button>
             </div>
         </div>
     </nav>
 
-    <!-- VIEW 1: THE INTERACTIVE MAP -->
-    <main id="view-map" class="view-section active relative flex-grow w-full h-full">
-        <div id="map" class="absolute inset-0"></div>
-
-        <!-- Floating UI: Left Sidebar (Search & Filters) -->
-        <div class="absolute top-6 left-6 w-80 z-20 hidden md:flex flex-col gap-4">
-            <!-- Search Box -->
-            <div class="glass-panel p-4 rounded-xl shadow-xl">
-                <h3 class="text-xs font-bold uppercase tracking-widest text-gray-500 mb-3">Discovery Engine</h3>
-                <div class="relative">
-                    <i data-lucide="search" class="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"></i>
-                    <input type="text" id="searchInput" placeholder="Search structures..." class="w-full bg-white border border-gray-200 rounded-lg py-2.5 pl-10 pr-3 text-sm focus:outline-none focus:border-black transition-colors" onkeyup="if(event.key === 'Enter') applyFilters()">
-                </div>
-            </div>
-
-            <!-- Style Filters -->
-            <div class="glass-panel p-4 rounded-xl shadow-xl">
-                <h3 class="text-xs font-bold uppercase tracking-widest text-gray-500 mb-3">Architectural Style</h3>
-                <div class="flex flex-wrap gap-2">
-                    <button onclick="setFilterStyle('All')" class="filter-btn active bg-black text-white px-3 py-1.5 rounded-md text-[10px] font-bold uppercase tracking-wider transition-colors">All</button>
-                    <button onclick="setFilterStyle('Modernism')" class="filter-btn bg-gray-100 text-gray-600 hover:bg-gray-200 px-3 py-1.5 rounded-md text-[10px] font-bold uppercase tracking-wider transition-colors">Modernism</button>
-                    <button onclick="setFilterStyle('Antiquity')" class="filter-btn bg-gray-100 text-gray-600 hover:bg-gray-200 px-3 py-1.5 rounded-md text-[10px] font-bold uppercase tracking-wider transition-colors">Antiquity</button>
-                    <button onclick="setFilterStyle('Gothic')" class="filter-btn bg-gray-100 text-gray-600 hover:bg-gray-200 px-3 py-1.5 rounded-md text-[10px] font-bold uppercase tracking-wider transition-colors">Gothic</button>
-                    <button onclick="setFilterStyle('Parametric')" class="filter-btn bg-gray-100 text-gray-600 hover:bg-gray-200 px-3 py-1.5 rounded-md text-[10px] font-bold uppercase tracking-wider transition-colors">Parametric</button>
-                </div>
-            </div>
+    <!-- CONTENT WRAPPER -->
+    <div class="relative flex-grow overflow-hidden">
+        
+        <!-- ========================================== -->
+        <!-- VIEW 1: INTERACTIVE MAP                    -->
+        <!-- ========================================== -->
+        <main id="view-map" class="view-section active absolute inset-0">
+            <div id="map"></div>
             
-            <div class="text-xs text-gray-500 font-medium ml-1">Showing <span id="resultCount" class="font-bold text-black">0</span> structures.</div>
-        </div>
-
-        <!-- Floating UI: Bottom Timeline -->
-        <div class="absolute bottom-8 left-1/2 -translate-x-1/2 w-[90%] max-w-4xl z-20">
-            <div class="dark-glass p-5 rounded-2xl shadow-2xl text-white">
-                <div class="flex justify-between items-end mb-4">
-                    <div>
-                        <span class="text-[9px] font-bold uppercase tracking-[0.2em] text-blue-400">Chronological Filter</span>
-                        <h3 class="serif text-2xl mt-1">Structures built up to: <span id="yearDisplay" class="font-bold">2026</span></h3>
+            <!-- Map Filters Sidebar -->
+            <div class="absolute top-6 left-6 w-80 z-20 hidden md:flex flex-col gap-4 pointer-events-none">
+                <div class="glass-panel p-4 rounded-xl shadow-xl pointer-events-auto">
+                    <h3 class="text-xs font-bold uppercase tracking-widest text-gray-500 mb-3">Discovery Engine</h3>
+                    <div class="relative">
+                        <i data-lucide="search" class="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"></i>
+                        <input type="text" id="mapSearch" placeholder="Search structures..." class="w-full bg-white border border-gray-200 rounded-lg py-2.5 pl-10 pr-3 text-sm focus:outline-none focus:border-black transition-colors" onkeyup="applyMapFilters()">
                     </div>
                 </div>
-                <input type="range" id="timeSlider" min="0" max="2026" value="2026" class="w-full" oninput="updateTimeline(this.value)">
-                <div class="flex justify-between text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-3">
-                    <span>Antiquity (0)</span>
-                    <span>Renaissance (1500)</span>
-                    <span>Industrial (1850)</span>
-                    <span>Modern (1950)</span>
-                    <span>Today</span>
+                <div class="glass-panel p-4 rounded-xl shadow-xl pointer-events-auto">
+                    <h3 class="text-xs font-bold uppercase tracking-widest text-gray-500 mb-3">Architectural Style</h3>
+                    <div class="flex flex-wrap gap-2" id="style-filters">
+                        <!-- Injected via JS -->
+                    </div>
+                </div>
+                <div class="text-xs text-gray-500 font-medium ml-1 shadow-sm px-2 py-1 bg-white/80 rounded inline-block w-max">Showing <span id="mapResultCount" class="font-bold text-black">0</span> structures.</div>
+            </div>
+
+            <!-- Map Timeline -->
+            <div class="absolute bottom-8 left-1/2 -translate-x-1/2 w-[90%] max-w-4xl z-20">
+                <div class="dark-glass p-5 rounded-2xl shadow-2xl text-white">
+                    <div class="flex justify-between items-end mb-4">
+                        <div>
+                            <span class="text-[9px] font-bold uppercase tracking-[0.2em] text-blue-400">Temporal Filter</span>
+                            <h3 class="serif text-2xl mt-1">Built up to: <span id="yearDisplay" class="font-bold">2026</span></h3>
+                        </div>
+                    </div>
+                    <input type="range" id="timeSlider" min="0" max="2026" value="2026" oninput="updateMapTimeline(this.value)">
                 </div>
             </div>
-        </div>
-    </main>
+        </main>
 
-    <!-- VIEW 2: THE DATABASE GRID -->
-    <main id="view-grid" class="view-section flex-grow bg-[#FAFAFA] overflow-y-auto h-full">
-        <div class="max-w-[1600px] mx-auto px-6 py-16">
-            <div class="border-b border-black pb-6 mb-12 flex flex-col md:flex-row justify-between items-end gap-6">
-                <div>
-                    <h2 class="serif text-5xl mb-3">The Architectural Record</h2>
-                    <p class="text-gray-500 max-w-xl text-lg">A comprehensive, curated database of the structures that defined human history, engineering, and culture.</p>
+        <!-- ========================================== -->
+        <!-- VIEW 2: DATABASE GRID                      -->
+        <!-- ========================================== -->
+        <main id="view-grid" class="view-section bg-[#FAFAFA] w-full">
+            <div class="max-w-[1600px] mx-auto px-6 py-12">
+                <div class="border-b border-black pb-6 mb-12 flex flex-col md:flex-row justify-between items-end gap-6">
+                    <div>
+                        <h2 class="serif text-5xl mb-3">The Architectural Record</h2>
+                        <p class="text-gray-500 max-w-xl text-lg">Browse the comprehensive database of humanity's greatest structural achievements.</p>
+                    </div>
                 </div>
-                <button onclick="switchView('view-map')" class="flex items-center gap-2 text-xs font-bold uppercase tracking-widest hover:text-blue-600 transition-colors">
-                    <i data-lucide="map" class="w-4 h-4"></i> Return to Map
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8" id="grid-container"></div>
+            </div>
+        </main>
+
+        <!-- ========================================== -->
+        <!-- VIEW 3: ARCHITECTS DIRECTORY               -->
+        <!-- ========================================== -->
+        <main id="view-architects" class="view-section bg-white w-full">
+            <div class="max-w-[1600px] mx-auto px-6 py-12">
+                <div class="border-b border-black pb-6 mb-12">
+                    <h2 class="serif text-5xl mb-3">The Master Builders</h2>
+                    <p class="text-gray-500 text-lg">Profiles and portfolios of the minds that shaped the built environment.</p>
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-10" id="architects-container"></div>
+            </div>
+        </main>
+
+        <!-- ========================================== -->
+        <!-- VIEW 4: CURATED COLLECTIONS                -->
+        <!-- ========================================== -->
+        <main id="view-collections" class="view-section bg-[#FAFAFA] w-full">
+            <div class="max-w-[1600px] mx-auto px-6 py-12">
+                <div class="border-b border-black pb-6 mb-12">
+                    <h2 class="serif text-5xl mb-3">Curated Collections</h2>
+                    <p class="text-gray-500 text-lg">Editorial groupings exploring specific movements, materials, and typologies.</p>
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-8" id="collections-container"></div>
+            </div>
+        </main>
+
+        <!-- ========================================== -->
+        <!-- VIEW 5: SAVED/BOOKMARKS                    -->
+        <!-- ========================================== -->
+        <main id="view-saved" class="view-section bg-white w-full">
+            <div class="max-w-[1600px] mx-auto px-6 py-12">
+                <div class="border-b border-black pb-6 mb-12">
+                    <h2 class="serif text-5xl mb-3">Your Personal Archive</h2>
+                    <p class="text-gray-500 text-lg">Structures you have bookmarked for future reference.</p>
+                </div>
+                <div id="saved-container" class="grid grid-cols-1 md:grid-cols-4 gap-8">
+                    <!-- Injected via JS -->
+                </div>
+            </div>
+        </main>
+
+        <!-- ========================================== -->
+        <!-- VIEW 6: BUILDING DETAIL (EDITORIAL)        -->
+        <!-- ========================================== -->
+        <main id="view-detail" class="view-section bg-white absolute inset-0 z-40">
+            <div class="sticky top-0 w-full bg-white/95 backdrop-blur-md border-b border-gray-100 px-6 py-4 flex justify-between items-center z-50">
+                <button onclick="navigateBack()" class="flex items-center gap-2 text-xs font-bold uppercase tracking-widest hover:text-blue-600 transition-colors">
+                    <i data-lucide="arrow-left" class="w-4 h-4"></i> Back to <span id="back-label">Map</span>
+                </button>
+                <div class="flex gap-4">
+                    <button onclick="toggleBookmarkCurrent()" id="btn-bookmark-detail" class="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center hover:bg-gray-200 transition-colors"><i data-lucide="bookmark" id="icon-bookmark-detail" class="w-4 h-4"></i></button>
+                </div>
+            </div>
+            <div id="detail-content" class="pb-24"></div>
+        </main>
+
+    </div> <!-- End Content Wrapper -->
+
+    <!-- ========================================================================================= -->
+    <!-- OVERLAY MODALS                                                                            -->
+    <!-- ========================================================================================= -->
+
+    <!-- 1. Authentication Modal -->
+    <div id="modal-auth" class="modal-overlay fixed inset-0 z-[100] bg-black/60 items-center justify-center p-4">
+        <div class="modal-content bg-white w-full max-w-4xl rounded-2xl overflow-hidden flex flex-col md:flex-row shadow-2xl">
+            <div class="w-full md:w-1/2 p-10 flex flex-col justify-center">
+                <div class="flex items-center gap-2 mb-8">
+                    <div class="w-6 h-6 bg-black text-white flex items-center justify-center"><i data-lucide="map" class="w-3 h-3"></i></div>
+                    <span class="font-bold tracking-tighter uppercase">ArchAtlas</span>
+                </div>
+                <h2 class="serif text-3xl font-bold mb-2">Welcome Back</h2>
+                <p class="text-gray-500 text-sm mb-8">Sign in to access your saved archives, custom topological maps, and educator resources.</p>
+                <input type="email" placeholder="Email Address" class="w-full border border-gray-300 rounded-lg px-4 py-3 mb-4 focus:outline-none focus:border-black text-sm">
+                <input type="password" placeholder="Password" class="w-full border border-gray-300 rounded-lg px-4 py-3 mb-6 focus:outline-none focus:border-black text-sm">
+                <button onclick="closeModal('modal-auth'); alert('Demo: Successfully logged in!');" class="w-full bg-black text-white rounded-lg py-3 font-bold uppercase text-xs tracking-widest hover:bg-gray-800 transition-colors mb-4">Sign In</button>
+                <button class="w-full border border-gray-300 text-gray-700 rounded-lg py-3 font-bold uppercase text-xs tracking-widest hover:bg-gray-50 transition-colors flex justify-center items-center gap-2">
+                    <svg class="w-4 h-4" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/><path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/><path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/><path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/></svg>
+                    Continue with Google
                 </button>
             </div>
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8" id="database-grid">
-                <!-- Javascript will inject cards here -->
+            <div class="hidden md:block w-1/2 relative bg-gray-100">
+                <img src="https://images.unsplash.com/photo-1600585154340-be6161a56a0c?q=80&w=800&auto=format&fit=crop" class="w-full h-full object-cover grayscale opacity-80" alt="Auth Background">
+                <div class="absolute inset-0 bg-blue-600/20 mix-blend-multiply"></div>
+            </div>
+            <button onclick="closeModal('modal-auth')" class="absolute top-4 right-4 bg-white/50 p-2 rounded-full hover:bg-white"><i data-lucide="x" class="w-5 h-5"></i></button>
+        </div>
+    </div>
+
+    <!-- 2. Pro SaaS Upgrade Modal -->
+    <div id="modal-pro" class="modal-overlay fixed inset-0 z-[100] bg-black/60 items-center justify-center p-4">
+        <div class="modal-content bg-white w-full max-w-5xl rounded-2xl overflow-hidden shadow-2xl relative">
+            <button onclick="closeModal('modal-pro')" class="absolute top-4 right-4 bg-gray-100 p-2 rounded-full hover:bg-gray-200"><i data-lucide="x" class="w-5 h-5"></i></button>
+            <div class="bg-slate-900 text-white p-12 text-center">
+                <h2 class="serif text-5xl mb-4">ArchAtlas Educator Pro</h2>
+                <p class="text-slate-400 max-w-2xl mx-auto text-lg">Unlock high-resolution CAD files, topological overlays, and classroom presentation tools.</p>
+            </div>
+            <div class="grid md:grid-cols-2 gap-0">
+                <div class="p-12 border-r border-gray-200">
+                    <h3 class="text-xl font-bold mb-2">Free Archive</h3>
+                    <p class="text-3xl font-bold mb-6">$0<span class="text-sm text-gray-500 font-medium">/forever</span></p>
+                    <ul class="space-y-4 mb-8 text-sm font-medium text-gray-600">
+                        <li class="flex items-center gap-3"><i data-lucide="check" class="w-4 h-4 text-green-500"></i> Global Map Access</li>
+                        <li class="flex items-center gap-3"><i data-lucide="check" class="w-4 h-4 text-green-500"></i> Read Architectural Editorials</li>
+                        <li class="flex items-center gap-3"><i data-lucide="check" class="w-4 h-4 text-green-500"></i> Save up to 50 bookmarks</li>
+                    </ul>
+                    <button class="w-full border-2 border-black rounded-lg py-3 font-bold uppercase text-xs tracking-widest hover:bg-gray-50">Current Plan</button>
+                </div>
+                <div class="p-12 bg-blue-50/50 relative">
+                    <span class="absolute top-0 right-12 transform -translate-y-1/2 bg-blue-600 text-white px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-widest">Most Popular</span>
+                    <h3 class="text-xl font-bold mb-2 text-blue-900">Institution Pro</h3>
+                    <p class="text-3xl font-bold mb-6 text-blue-900">$29<span class="text-sm text-blue-700/60 font-medium">/month per seat</span></p>
+                    <ul class="space-y-4 mb-8 text-sm font-medium text-blue-900/80">
+                        <li class="flex items-center gap-3"><i data-lucide="check" class="w-4 h-4 text-blue-600"></i> Unlimited 3D Wireframe Viewer</li>
+                        <li class="flex items-center gap-3"><i data-lucide="check" class="w-4 h-4 text-blue-600"></i> Downloadable Structural Blueprints</li>
+                        <li class="flex items-center gap-3"><i data-lucide="check" class="w-4 h-4 text-blue-600"></i> API Access for Data Science projects</li>
+                        <li class="flex items-center gap-3"><i data-lucide="check" class="w-4 h-4 text-blue-600"></i> White-label export for presentations</li>
+                    </ul>
+                    <button onclick="alert('Redirecting to Stripe Checkout...')" class="w-full bg-blue-600 text-white rounded-lg py-3 font-bold uppercase text-xs tracking-widest hover:bg-blue-700 shadow-lg shadow-blue-600/30">Start 14-Day Trial</button>
+                </div>
             </div>
         </div>
-    </main>
+    </div>
 
-    <!-- VIEW 3: IN-DEPTH BUILDING DETAIL (Editorial Page) -->
-    <main id="view-detail" class="view-section flex-grow bg-white overflow-y-auto h-full absolute inset-0 z-[60]">
-        <!-- Nav override for detail page -->
-        <div class="sticky top-0 w-full bg-white/90 backdrop-blur-md border-b border-gray-100 px-6 py-4 flex justify-between items-center z-50">
-            <button onclick="switchView(lastView)" class="flex items-center gap-2 text-xs font-bold uppercase tracking-widest hover:text-blue-600 transition-colors">
-                <i data-lucide="arrow-left" class="w-4 h-4"></i> Back
-            </button>
-            <div class="flex gap-4">
-                <button class="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center hover:bg-gray-200"><i data-lucide="bookmark" class="w-4 h-4"></i></button>
-                <button class="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center hover:bg-gray-200"><i data-lucide="share" class="w-4 h-4"></i></button>
+    <!-- 3. 3D Model / Library Overlay Simulation -->
+    <div id="modal-3d" class="modal-overlay fixed inset-0 z-[100] bg-black/90 items-center justify-center p-4">
+        <div class="w-full h-full max-w-[1600px] bg-[#0f172a] rounded-2xl overflow-hidden flex flex-col border border-white/10 relative shadow-2xl modal-content">
+            <!-- Header -->
+            <div class="h-14 border-b border-white/10 bg-black/40 flex justify-between items-center px-6">
+                <div class="flex items-center gap-4 text-white">
+                    <i data-lucide="box" class="w-5 h-5 text-emerald-400"></i>
+                    <span class="text-sm font-bold uppercase tracking-widest" id="3d-title">Structural Viewer Active</span>
+                </div>
+                <button onclick="closeModal('modal-3d')" class="text-gray-400 hover:text-white flex items-center gap-2 text-xs uppercase tracking-widest"><i data-lucide="x" class="w-4 h-4"></i> Close Engine</button>
+            </div>
+            <!-- Main Viewer -->
+            <div class="flex-grow flex cad-bg relative overflow-hidden group cursor-move">
+                <!-- Sidebar UI -->
+                <div class="absolute left-6 top-6 w-64 bg-black/80 backdrop-blur-md border border-white/10 rounded-xl p-5 text-white z-10">
+                    <h4 class="text-[10px] uppercase tracking-widest text-emerald-400 mb-4 font-bold">Analysis Layers</h4>
+                    <div class="space-y-3 text-sm font-medium">
+                        <label class="flex items-center gap-3 cursor-pointer"><input type="checkbox" checked class="accent-emerald-400"> Wireframe Mesh</label>
+                        <label class="flex items-center gap-3 cursor-pointer"><input type="checkbox" class="accent-emerald-400"> Load Bearing Stress</label>
+                        <label class="flex items-center gap-3 cursor-pointer"><input type="checkbox" checked class="accent-emerald-400"> Core Foundation</label>
+                    </div>
+                    <div class="mt-6 pt-4 border-t border-white/10">
+                        <p class="text-[10px] text-gray-400 uppercase tracking-widest mb-2">Simulated View</p>
+                        <p class="text-xs text-gray-300">Drag to rotate. Scroll to zoom. (Note: This is a placeholder for the WebGL/Three.js engine in production).</p>
+                    </div>
+                </div>
+                <!-- 3D Graphic Placeholder -->
+                <div class="absolute inset-0 flex items-center justify-center p-20 opacity-80 group-hover:scale-105 transition-transform duration-1000 ease-out">
+                    <img id="3d-image" src="" class="max-w-full max-h-full object-contain filter invert opacity-50 mix-blend-screen" style="filter: sepia(100%) hue-rotate(120deg) saturate(300%) brightness(80%);">
+                </div>
             </div>
         </div>
+    </div>
 
-        <div id="detail-content" class="pb-24">
-            <!-- Javascript will inject the editorial content here -->
-        </div>
-    </main>
-
+    <!-- ========================================================================================= -->
+    <!-- JAVASCRIPT ENGINE                                                                         -->
+    <!-- ========================================================================================= -->
     <script>
-        // --- 1. INITIALIZE ICONS ---
-        lucide.createIcons();
-
-        // --- 2. THE COMPREHENSIVE DATABASE ---
-        const buildings = [
-            {
-                id: "fallingwater", name: "Fallingwater", architect: "Frank Lloyd Wright", year: 1935, style: "Modernism",
-                lat: 39.9061, lng: -79.4678, country: "USA", location: "Mill Run, Pennsylvania",
-                img: "https://images.unsplash.com/photo-1575517111839-3a3843ee7f5d?q=80&w=1200&auto=format&fit=crop",
-                materials: "Native sandstone, reinforced concrete, glass, steel",
-                description: "Perhaps the most famous private residence in the world, Fallingwater redefined the relationship between man, architecture, and nature. Rather than placing the house to view the waterfall, Wright built the home directly over it, anchoring the concrete cantilevered trays into the existing bedrock. It stands as the ultimate masterpiece of Wright's philosophy of 'Organic Architecture'."
-            },
-            {
-                id: "pantheon", name: "The Pantheon", architect: "Apollodorus of Damascus (Debated)", year: 126, style: "Antiquity",
-                lat: 41.8986, lng: 12.4769, country: "Italy", location: "Rome",
-                img: "https://images.unsplash.com/photo-1542301197-10492801488c?q=80&w=1200&auto=format&fit=crop",
-                materials: "Roman concrete, tuff, pumice, brick, marble",
-                description: "Nearly two thousand years after it was built, the Pantheon's dome remains the largest unreinforced solid concrete dome in the world. Originally a Roman temple commissioned by Marcus Agrippa, its perfect proportions (the height to the oculus and the diameter of the interior circle are identical) have influenced classical architecture continuously since the Renaissance."
-            },
-            {
-                id: "guggenheim", name: "Solomon R. Guggenheim Museum", architect: "Frank Lloyd Wright", year: 1959, style: "Modernism",
-                lat: 40.7830, lng: -73.9590, country: "USA", location: "New York City, New York",
-                img: "https://images.unsplash.com/photo-1555505012-40149026402d?q=80&w=1200&auto=format&fit=crop",
-                materials: "Gunite (sprayed concrete), steel",
-                description: "Wright conceived the museum as a 'temple of the spirit'. The continuous spiral ramp defied the traditional room-by-room museum layout, allowing visitors to experience art in a fluid, unbroken journey. Its stark, organic white form stands in brilliant contrast to the rigid rectangular grid of Manhattan."
-            },
-            {
-                id: "sagrada", name: "Sagrada Família", architect: "Antoni Gaudí", year: 1882, style: "Modernisme",
-                lat: 41.4036, lng: 2.1744, country: "Spain", location: "Barcelona",
-                img: "https://images.unsplash.com/photo-1583778175782-d1d494957d66?q=80&w=1200&auto=format&fit=crop",
-                materials: "Montjuïc stone, granite, reinforced concrete",
-                description: "Gaudí’s unfinished magnum opus combines Gothic and curvilinear Art Nouveau forms with unprecedented structural engineering. Using weighted string models to calculate catenary arches, Gaudí designed columns that branch like trees to support the massive vaults, creating an interior that feels like a sacred, geometric forest."
-            },
-            {
-                id: "sydney", name: "Sydney Opera House", architect: "Jørn Utzon", year: 1973, style: "Expressionism",
-                lat: -33.8568, lng: 151.2153, country: "Australia", location: "Sydney, New South Wales",
-                img: "https://images.unsplash.com/photo-1624138784614-87fd1b6528f8?q=80&w=1200&auto=format&fit=crop",
-                materials: "Precast concrete panels, Swedish ceramic tiles",
-                description: "One of the 20th century's most iconic buildings, Utzon's design was so advanced that the engineering required to build its 'shells' hadn't been invented yet. The solution—deriving all the shells from the surface of a single imagined sphere—remains one of the greatest collaborations between architect and structural engineer (Ove Arup)."
-            },
-            {
-                id: "notre", name: "Notre-Dame de Paris", architect: "Maurice de Sully (Initiator)", year: 1345, style: "Gothic",
-                lat: 48.8529, lng: 2.3500, country: "France", location: "Paris",
-                img: "https://images.unsplash.com/photo-1478391679764-b2d8b3cd1e94?q=80&w=1200&auto=format&fit=crop",
-                materials: "Lutetian limestone, timber, lead, glass",
-                description: "Among the first buildings in the world to use the flying buttress. When the original nave walls began fracturing under the stress of the massive roof, the architects built exterior arched supports, allowing for walls composed almost entirely of intricate stained glass. It remains the gold standard of French Gothic architecture."
-            },
-            {
-                id: "burj", name: "Burj Khalifa", architect: "Adrian Smith (SOM)", year: 2010, style: "Neo-futurism",
-                lat: 25.1972, lng: 55.2744, country: "UAE", location: "Dubai",
-                img: "https://images.unsplash.com/photo-1597659840241-37e2b9c2f55f?q=80&w=1200&auto=format&fit=crop",
-                materials: "Reinforced concrete, aluminum, glass",
-                description: "Standing at 828 meters, it is the tallest structure ever built. Its structural system, the 'buttressed core,' was invented specifically for this building. The Y-shaped floor plan minimizes wind forces and prevents wind vortices from organizing, solving the primary challenge of supertall skyscraper engineering."
-            },
-            {
-                id: "disney", name: "Walt Disney Concert Hall", architect: "Frank Gehry", year: 2003, style: "Parametric",
-                lat: 34.0553, lng: -118.2498, country: "USA", location: "Los Angeles, California",
-                img: "https://images.unsplash.com/photo-1522068779951-e04f0f065360?q=80&w=1200&auto=format&fit=crop",
-                materials: "Stainless steel, Douglas fir, steel frame",
-                description: "A triumph of computer-aided design, Gehry used aerospace software (CATIA) to translate his sweeping, sculptural paper models into buildable structural steel. While the exterior is an explosion of metallic sails, the interior auditorium is an acoustically perfect, warm wooden chamber."
-            }
+        // -----------------------------------------
+        // 1. SYSTEM DATA
+        // -----------------------------------------
+        const stylesList = ['All', 'Modernism', 'Antiquity', 'Gothic', 'Parametric', 'Brutalism', 'Renaissance'];
+        
+        const architects = [
+            { id: "flw", name: "Frank Lloyd Wright", era: "1867–1959", img: "https://images.unsplash.com/photo-1555505012-40149026402d?q=80&w=400&auto=format&fit=crop", bio: "The pioneer of Organic Architecture, Wright believed in designing structures that were in harmony with humanity and its environment.", works: ["fallingwater", "guggenheim"] },
+            { id: "gaudi", name: "Antoni Gaudí", era: "1852–1926", img: "https://images.unsplash.com/photo-1583778175782-d1d494957d66?q=80&w=400&auto=format&fit=crop", bio: "The face of Catalan Modernisme, Gaudí integrated highly personalized styles inspired by nature, religion, and advanced geometry.", works: ["sagrada"] },
+            { id: "zaha", name: "Zaha Hadid", era: "1950–2016", img: "https://images.unsplash.com/photo-1621250269431-7b79659b81b2?q=80&w=400&auto=format&fit=crop", bio: "Known as the 'Queen of the curve', Hadid's parametric designs liberated architectural geometry, giving it a whole new expressive identity.", works: ["heydar"] },
+            { id: "mies", name: "Ludwig Mies van der Rohe", era: "1886–1969", img: "https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?q=80&w=400&auto=format&fit=crop", bio: "A pioneer of modernist architecture. His 'less is more' approach defined the corporate skyscraper with minimal frameworks of structural order.", works: ["seagram"] }
         ];
 
-        // --- 3. STATE MANAGEMENT ---
-        let currentStyle = 'All';
-        let currentYear = 2026;
-        let lastView = 'view-map';
+        const buildings = [
+            { id: "fallingwater", name: "Fallingwater", architectId: "flw", architect: "Frank Lloyd Wright", year: 1935, style: "Modernism", lat: 39.9061, lng: -79.4678, country: "USA", location: "Mill Run, PA", img: "https://images.unsplash.com/photo-1575517111839-3a3843ee7f5d?q=80&w=1200&auto=format&fit=crop", blueprint: "https://images.unsplash.com/photo-1614613535308-eb5fbd3d2c17?q=80&w=800&auto=format&fit=crop", materials: "Native sandstone, reinforced concrete", description: "Built directly over a waterfall, anchoring cantilevered concrete trays into existing bedrock. The ultimate masterpiece of 'Organic Architecture'." },
+            { id: "pantheon", name: "The Pantheon", architectId: "unknown", architect: "Apollodorus (Debated)", year: 126, style: "Antiquity", lat: 41.8986, lng: 12.4769, country: "Italy", location: "Rome", img: "https://images.unsplash.com/photo-1542301197-10492801488c?q=80&w=1200&auto=format&fit=crop", blueprint: "https://images.unsplash.com/photo-1533154683836-84ea7a0bc310?q=80&w=800&auto=format&fit=crop", materials: "Roman concrete, tuff, pumice", description: "The largest unreinforced solid concrete dome in the world. Its perfect proportions have influenced classical architecture continuously since the Renaissance." },
+            { id: "guggenheim", name: "Guggenheim Museum", architectId: "flw", architect: "Frank Lloyd Wright", year: 1959, style: "Modernism", lat: 40.7830, lng: -73.9590, country: "USA", location: "New York, NY", img: "https://images.unsplash.com/photo-1555505012-40149026402d?q=80&w=1200&auto=format&fit=crop", blueprint: "https://images.unsplash.com/photo-1555505012-40149026402d?q=80&w=800&auto=format&fit=crop", materials: "Gunite (sprayed concrete)", description: "A continuous spiral ramp that defied traditional museum layouts, allowing visitors to experience art in a fluid, unbroken journey." },
+            { id: "sagrada", name: "Sagrada Família", architectId: "gaudi", architect: "Antoni Gaudí", year: 1882, style: "Gothic", lat: 41.4036, lng: 2.1744, country: "Spain", location: "Barcelona", img: "https://images.unsplash.com/photo-1583778175782-d1d494957d66?q=80&w=1200&auto=format&fit=crop", blueprint: "https://images.unsplash.com/photo-1583778175782-d1d494957d66?q=80&w=800&auto=format&fit=crop", materials: "Montjuïc stone, granite", description: "Combines Gothic and Art Nouveau forms. Uses catenary arches and columns that branch like trees to support massive vaults." },
+            { id: "heydar", name: "Heydar Aliyev Center", architectId: "zaha", architect: "Zaha Hadid", year: 2012, style: "Parametric", lat: 40.3953, lng: 49.8676, country: "Azerbaijan", location: "Baku", img: "https://images.unsplash.com/photo-1621250269431-7b79659b81b2?q=80&w=1200&auto=format&fit=crop", blueprint: "https://images.unsplash.com/photo-1621250269431-7b79659b81b2?q=80&w=800&auto=format&fit=crop", materials: "Glass Fiber Reinforced Concrete", description: "Noted for its distinctive fluid architecture and curved style that eschews sharp angles, representing the modernization of Baku." },
+            { id: "seagram", name: "Seagram Building", architectId: "mies", architect: "Mies van der Rohe", year: 1958, style: "Modernism", lat: 40.7580, lng: -73.9719, country: "USA", location: "New York, NY", img: "https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?q=80&w=1200&auto=format&fit=crop", blueprint: "https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?q=80&w=800&auto=format&fit=crop", materials: "Bronze, glass, steel", description: "The epitome of the modern functionalist corporate aesthetic. Mies insisted the building's structural elements be visible, using decorative bronze I-beams on the facade." },
+            { id: "national", name: "National Theatre", architectId: "lasdun", architect: "Denys Lasdun", year: 1976, style: "Brutalism", lat: 51.5070, lng: -0.1142, country: "UK", location: "London", img: "https://images.unsplash.com/photo-1626081498666-4f400f89bf94?q=80&w=1200&auto=format&fit=crop", blueprint: "https://images.unsplash.com/photo-1626081498666-4f400f89bf94?q=80&w=800&auto=format&fit=crop", materials: "Board-marked concrete", description: "Described as 'an aesthetic of broken forms', it is one of the most prominent Brutalist buildings in the UK, featuring raw concrete surfaces." }
+        ];
 
-        // --- 4. LEAFLET MAP SETUP ---
-        const map = L.map('map', { zoomControl: false }).setView([40, -30], 3);
-        L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
-            attribution: '&copy; OpenStreetMap & CartoDB'
-        }).addTo(map);
+        const collections = [
+            { id: "c1", title: "Concrete Cathedrals", desc: "The rise and endurance of Brutalist civic architecture.", img: "https://images.unsplash.com/photo-1626081498666-4f400f89bf94?q=80&w=800&auto=format&fit=crop" },
+            { id: "c2", title: "Organic Modernism", desc: "Structures that blur the line between human habitation and the natural world.", img: "https://images.unsplash.com/photo-1575517111839-3a3843ee7f5d?q=80&w=800&auto=format&fit=crop" },
+            { id: "c3", title: "The Classical Proportion", desc: "How Roman engineering created templates used for millennia.", img: "https://images.unsplash.com/photo-1542301197-10492801488c?q=80&w=800&auto=format&fit=crop" },
+            { id: "c4", title: "Parametric Futures", desc: "When algorithms and aerospace software build skyscrapers.", img: "https://images.unsplash.com/photo-1621250269431-7b79659b81b2?q=80&w=800&auto=format&fit=crop" }
+        ];
+
+        // -----------------------------------------
+        // 2. STATE MANAGEMENT & ROUTING
+        // -----------------------------------------
+        let state = {
+            view: 'view-map',
+            history: [],
+            mapStyleFilter: 'All',
+            mapYearFilter: 2026,
+            savedIds: new Set(),
+            currentDetailId: null
+        };
+
+        function navigate(viewId, pushHistory = true) {
+            // Update History
+            if (pushHistory && state.view !== viewId) {
+                state.history.push(state.view);
+            }
+            state.view = viewId;
+
+            // Hide All
+            document.querySelectorAll('.view-section').forEach(el => el.classList.remove('active'));
+            // Remove Nav active states
+            document.querySelectorAll('.nav-link').forEach(el => el.classList.remove('text-black', 'active'));
+            
+            // Show Target
+            document.getElementById(viewId).classList.add('active');
+            
+            // Highlight Nav (if it's a main tab)
+            const navItem = document.querySelector(`.nav-link[data-target="${viewId}"]`);
+            if(navItem) navItem.classList.add('text-black', 'active');
+
+            // View specific logic
+            if (viewId === 'view-map') setTimeout(() => map.invalidateSize(), 100);
+            if (viewId === 'view-saved') renderSaved();
+
+            window.scrollTo(0, 0);
+        }
+
+        function navigateBack() {
+            if (state.history.length > 0) {
+                const previousView = state.history.pop();
+                navigate(previousView, false);
+            } else {
+                navigate('view-map');
+            }
+        }
+
+        function setBackLabel(label) {
+            document.getElementById('back-label').innerText = label;
+        }
+
+        // -----------------------------------------
+        // 3. BOOKMARK SYSTEM
+        // -----------------------------------------
+        function toggleBookmark(id, event) {
+            if(event) event.stopPropagation(); // prevent clicking through to detail page
+            
+            if (state.savedIds.has(id)) {
+                state.savedIds.delete(id);
+            } else {
+                state.savedIds.add(id);
+            }
+            updateBookmarkBadge();
+            // Optional: re-render grids if we are currently on them to update icons
+        }
+
+        function toggleBookmarkCurrent() {
+            if(state.currentDetailId) {
+                toggleBookmark(state.currentDetailId);
+                updateDetailBookmarkIcon();
+            }
+        }
+
+        function updateBookmarkBadge() {
+            const badge = document.getElementById('saved-badge');
+            const count = state.savedIds.size;
+            if (count > 0) {
+                badge.innerText = count;
+                badge.classList.remove('hidden');
+            } else {
+                badge.classList.add('hidden');
+            }
+        }
+
+        function updateDetailBookmarkIcon() {
+            const icon = document.getElementById('icon-bookmark-detail');
+            if(state.savedIds.has(state.currentDetailId)) {
+                icon.classList.add('fill-black', 'text-black');
+            } else {
+                icon.classList.remove('fill-black', 'text-black');
+            }
+        }
+
+        // -----------------------------------------
+        // 4. MAP ENGINE (Leaflet)
+        // -----------------------------------------
+        const map = L.map('map', { zoomControl: false }).setView([40, -10], 3);
+        L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', { attribution: '&copy; CartoDB' }).addTo(map);
         L.control.zoom({ position: 'topright' }).addTo(map);
-
         let mapMarkers = [];
 
-        // --- 5. CORE LOGIC: FILTERING & RENDERING ---
-        function applyFilters() {
-            const query = document.getElementById('searchInput').value.toLowerCase();
-            
-            const filteredData = buildings.filter(b => {
-                const matchesSearch = b.name.toLowerCase().includes(query) || b.architect.toLowerCase().includes(query);
-                const matchesStyle = currentStyle === 'All' || b.style === currentStyle;
-                const matchesYear = b.year <= currentYear;
-                return matchesSearch && matchesStyle && matchesYear;
-            });
-
-            document.getElementById('resultCount').innerText = filteredData.length;
-            renderMap(filteredData);
-            renderGrid(filteredData);
+        function renderMapFiltersUI() {
+            const container = document.getElementById('style-filters');
+            container.innerHTML = stylesList.map(style => `
+                <button onclick="setMapStyle('${style}')" id="filter-btn-${style}" class="${style === 'All' ? 'bg-black text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'} px-3 py-1.5 rounded-md text-[10px] font-bold uppercase tracking-wider transition-colors">${style}</button>
+            `).join('');
         }
 
-        function setFilterStyle(style) {
-            currentStyle = style;
-            // Update button UI
-            document.querySelectorAll('.filter-btn').forEach(btn => {
-                if(btn.innerText === style) {
-                    btn.className = "filter-btn active bg-black text-white px-3 py-1.5 rounded-md text-[10px] font-bold uppercase tracking-wider transition-colors";
+        function setMapStyle(style) {
+            state.mapStyleFilter = style;
+            stylesList.forEach(s => {
+                const btn = document.getElementById(`filter-btn-${s}`);
+                if(s === style) {
+                    btn.className = "bg-black text-white px-3 py-1.5 rounded-md text-[10px] font-bold uppercase tracking-wider transition-colors";
                 } else {
-                    btn.className = "filter-btn bg-gray-100 text-gray-600 hover:bg-gray-200 px-3 py-1.5 rounded-md text-[10px] font-bold uppercase tracking-wider transition-colors";
+                    btn.className = "bg-gray-100 text-gray-600 hover:bg-gray-200 px-3 py-1.5 rounded-md text-[10px] font-bold uppercase tracking-wider transition-colors";
                 }
             });
-            applyFilters();
+            applyMapFilters();
         }
 
-        function updateTimeline(year) {
-            currentYear = year;
+        function updateMapTimeline(year) {
+            state.mapYearFilter = year;
             document.getElementById('yearDisplay').innerText = year;
-            applyFilters();
+            applyMapFilters();
         }
 
-        function renderMap(data) {
-            mapMarkers.forEach(marker => map.removeLayer(marker));
-            mapMarkers = [];
+        function applyMapFilters() {
+            const query = document.getElementById('mapSearch').value.toLowerCase();
+            const filtered = buildings.filter(b => {
+                const searchMatch = b.name.toLowerCase().includes(query) || b.architect.toLowerCase().includes(query);
+                const styleMatch = state.mapStyleFilter === 'All' || b.style === state.mapStyleFilter;
+                const yearMatch = b.year <= state.mapYearFilter;
+                return searchMatch && styleMatch && yearMatch;
+            });
+            document.getElementById('mapResultCount').innerText = filtered.length;
+            drawPins(filtered);
+        }
 
-            data.forEach(bldg => {
+        function drawPins(data) {
+            mapMarkers.forEach(m => map.removeLayer(m));
+            mapMarkers = [];
+            data.forEach(b => {
                 const popupHTML = `
-                    <div class="bg-white rounded-xl overflow-hidden flex flex-col group cursor-pointer" onclick="openDetail('${bldg.id}')">
+                    <div class="bg-white rounded-xl overflow-hidden flex flex-col group cursor-pointer" onclick="openBuildingDetail('${b.id}', 'Map')">
                         <div class="relative h-40 overflow-hidden">
-                            <img src="${bldg.img}" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" alt="${bldg.name}">
-                            <div class="absolute inset-0 bg-black/10 group-hover:bg-black/0 transition-colors"></div>
-                            <span class="absolute top-3 left-3 bg-white/90 backdrop-blur-sm px-2 py-1 rounded text-[9px] font-bold tracking-widest uppercase shadow-sm">${bldg.year}</span>
+                            <img src="${b.img}" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700">
+                            <span class="absolute top-3 left-3 bg-white/90 px-2 py-1 rounded text-[9px] font-bold tracking-widest uppercase shadow-sm">${b.year}</span>
                         </div>
                         <div class="p-5">
-                            <span class="text-[9px] text-blue-600 uppercase font-bold tracking-widest mb-1 block">${bldg.style}</span>
-                            <h3 class="serif font-bold text-xl leading-tight mb-1 group-hover:text-blue-600 transition-colors">${bldg.name}</h3>
-                            <p class="text-xs text-gray-500 font-medium">${bldg.architect}</p>
+                            <span class="text-[9px] text-blue-600 uppercase font-bold tracking-widest mb-1 block">${b.style}</span>
+                            <h3 class="serif font-bold text-xl leading-tight mb-1">${b.name}</h3>
+                            <p class="text-xs text-gray-500 font-medium">${b.architect}</p>
                             <div class="mt-4 pt-4 border-t border-gray-100 flex justify-between items-center text-xs font-bold uppercase tracking-wider text-black">
-                                Explore Record <i data-lucide="arrow-right" class="w-4 h-4"></i>
+                                Explore <i data-lucide="arrow-right" class="w-4 h-4"></i>
                             </div>
                         </div>
                     </div>
                 `;
-
-                // Add pin
-                const marker = L.marker([bldg.lat, bldg.lng])
-                    .bindPopup(popupHTML, { offset: [0, -10] })
-                    .addTo(map);
+                const marker = L.marker([b.lat, b.lng]).bindPopup(popupHTML, { offset: [0, -10] }).addTo(map);
                 mapMarkers.push(marker);
             });
         }
 
-        function renderGrid(data) {
-            const grid = document.getElementById('database-grid');
-            if (data.length === 0) {
-                grid.innerHTML = `<div class="col-span-full py-20 text-center text-gray-500 text-lg">No structures match the current temporal or stylistic filters.</div>`;
-                return;
-            }
-
-            grid.innerHTML = data.map(bldg => `
-                <div onclick="openDetail('${bldg.id}')" class="group cursor-pointer bg-white border border-gray-200 rounded-xl overflow-hidden hover:shadow-2xl hover:shadow-black/5 transition-all duration-300">
+        // -----------------------------------------
+        // 5. GRID & DIRECTORY RENDERING
+        // -----------------------------------------
+        function createBuildingCard(bldg, sourceLabel) {
+            const isSaved = state.savedIds.has(bldg.id);
+            return `
+                <div onclick="openBuildingDetail('${bldg.id}', '${sourceLabel}')" class="group cursor-pointer bg-white border border-gray-200 rounded-xl overflow-hidden hover:shadow-2xl hover:shadow-black/5 transition-all duration-300 relative">
+                    <button onclick="toggleBookmark('${bldg.id}', event)" class="absolute top-3 right-3 z-10 w-8 h-8 bg-white/90 backdrop-blur-sm rounded-full flex items-center justify-center shadow-sm hover:scale-110 transition-transform">
+                        <i data-lucide="bookmark" class="w-4 h-4 ${isSaved ? 'fill-black text-black' : 'text-gray-600'}"></i>
+                    </button>
                     <div class="relative aspect-[4/3] overflow-hidden">
                         <img src="${bldg.img}" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700">
                         <div class="absolute bottom-3 left-3 bg-black/80 text-white px-2 py-1 rounded text-[10px] font-bold tracking-widest uppercase">${bldg.year}</div>
@@ -331,113 +529,153 @@
                         <span class="text-[10px] font-bold tracking-widest uppercase text-blue-600 mb-2 block">${bldg.style}</span>
                         <h3 class="serif text-2xl font-bold mb-1">${bldg.name}</h3>
                         <p class="text-sm text-gray-500 mb-4">${bldg.architect}</p>
-                        <p class="text-xs font-medium text-gray-400 flex items-center gap-1.5"><i data-lucide="map-pin" class="w-3.5 h-3.5"></i> ${bldg.location}</p>
+                    </div>
+                </div>
+            `;
+        }
+
+        function renderDatabaseGrid() {
+            const container = document.getElementById('grid-container');
+            container.innerHTML = buildings.map(b => createBuildingCard(b, 'Database')).join('');
+        }
+
+        function renderArchitects() {
+            const container = document.getElementById('architects-container');
+            container.innerHTML = architects.map(a => `
+                <div class="border border-gray-200 rounded-2xl p-8 hover:shadow-xl transition-all group cursor-pointer" onclick="alert('Architect Profile feature expanding in V3! View Database for their works.')">
+                    <img src="${a.img}" class="w-20 h-20 rounded-full object-cover mb-6 grayscale group-hover:grayscale-0 transition-all">
+                    <h3 class="serif text-2xl font-bold mb-1">${a.name}</h3>
+                    <p class="text-xs font-bold uppercase tracking-widest text-gray-400 mb-4">${a.era}</p>
+                    <p class="text-sm text-gray-600 leading-relaxed mb-6">${a.bio}</p>
+                    <p class="text-xs font-medium text-blue-600 flex items-center gap-2">View Portfolio <i data-lucide="arrow-right" class="w-3 h-3"></i></p>
+                </div>
+            `).join('');
+        }
+
+        function renderCollections() {
+            const container = document.getElementById('collections-container');
+            container.innerHTML = collections.map(c => `
+                <div class="relative aspect-[21/9] rounded-2xl overflow-hidden group cursor-pointer" onclick="navigate('view-grid')">
+                    <img src="${c.img}" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700">
+                    <div class="absolute inset-0 bg-gradient-to-t from-black/90 via-black/40 to-transparent"></div>
+                    <div class="absolute bottom-0 left-0 p-8 text-white">
+                        <h3 class="serif text-3xl font-bold mb-2">${c.title}</h3>
+                        <p class="text-white/80 font-medium">${c.desc}</p>
                     </div>
                 </div>
             `).join('');
-            
-            // Re-initialize icons for newly injected HTML
+        }
+
+        function renderSaved() {
+            const container = document.getElementById('saved-container');
+            const savedBldgs = buildings.filter(b => state.savedIds.has(b.id));
+            if (savedBldgs.length === 0) {
+                container.innerHTML = `<div class="col-span-full py-20 text-gray-400 italic">No architecture bookmarked yet. Explore the map to build your archive.</div>`;
+            } else {
+                container.innerHTML = savedBldgs.map(b => createBuildingCard(b, 'Archive')).join('');
+            }
             lucide.createIcons();
         }
 
-        // --- 6. NAVIGATION & EDITORIAL PAGE LOGIC ---
-        function switchView(viewId) {
-            // Track where we came from if we aren't going to the detail page
-            if(viewId !== 'view-detail') lastView = viewId;
-
-            // Hide all
-            document.querySelectorAll('.view-section').forEach(el => el.classList.remove('active'));
-            document.getElementById('nav-map').classList.replace('text-black', 'text-gray-500');
-            document.getElementById('nav-grid').classList.replace('text-black', 'text-gray-500');
-            
-            // Show Target
-            document.getElementById(viewId).classList.add('active');
-            
-            // Nav Highlighting & Map Fix
-            if(viewId === 'view-map') {
-                document.getElementById('nav-map').classList.replace('text-gray-500', 'text-black');
-                setTimeout(() => map.invalidateSize(), 100); 
-            } else if (viewId === 'view-grid') {
-                document.getElementById('nav-grid').classList.replace('text-gray-500', 'text-black');
-            }
-            
-            window.scrollTo(0, 0);
-        }
-
-        function openDetail(id) {
+        // -----------------------------------------
+        // 6. BUILDING DETAIL PAGE (EDITORIAL)
+        // -----------------------------------------
+        function openBuildingDetail(id, sourceLabel) {
             const bldg = buildings.find(b => b.id === id);
             if(!bldg) return;
 
-            const detailHTML = `
-                <!-- Hero Image -->
-                <div class="w-full h-[50vh] relative">
-                    <img src="${bldg.img}" class="w-full h-full object-cover" alt="${bldg.name}">
+            state.currentDetailId = id;
+            setBackLabel(sourceLabel);
+            updateDetailBookmarkIcon();
+
+            const html = `
+                <div class="w-full h-[60vh] relative">
+                    <img src="${bldg.img}" class="w-full h-full object-cover">
                     <div class="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent"></div>
-                    <div class="absolute bottom-0 left-0 w-full p-8 md:p-16 max-w-[1200px] mx-auto text-white">
-                        <span class="bg-blue-600 text-white px-3 py-1.5 rounded text-[10px] font-bold tracking-widest uppercase mb-4 inline-block">${bldg.style}</span>
-                        <h1 class="serif text-5xl md:text-7xl font-bold mb-2">${bldg.name}</h1>
-                        <p class="text-lg md:text-xl text-white/80 font-medium flex items-center gap-2"><i data-lucide="user" class="w-5 h-5"></i> ${bldg.architect}</p>
+                    <div class="absolute bottom-0 left-0 w-full p-8 md:p-16 max-w-[1400px] mx-auto text-white">
+                        <span class="bg-blue-600 px-3 py-1.5 rounded text-[10px] font-bold tracking-widest uppercase mb-4 inline-block">${bldg.style}</span>
+                        <h1 class="serif text-5xl md:text-7xl font-bold mb-4">${bldg.name}</h1>
+                        <p class="text-xl text-white/80 font-medium flex items-center gap-2"><i data-lucide="user" class="w-5 h-5"></i> ${bldg.architect}</p>
                     </div>
                 </div>
 
-                <!-- Editorial Content -->
-                <div class="max-w-[1200px] mx-auto px-6 py-16 grid md:grid-cols-12 gap-16">
+                <div class="max-w-[1400px] mx-auto px-6 py-16 grid md:grid-cols-12 gap-16">
                     <!-- Main Essay -->
                     <div class="md:col-span-8">
                         <h2 class="text-xs font-bold uppercase tracking-[0.2em] text-gray-400 mb-6 border-b border-gray-200 pb-4">Architectural Significance</h2>
-                        <p class="text-xl md:text-2xl text-gray-800 leading-relaxed serif">${bldg.description}</p>
+                        <p class="text-xl md:text-2xl text-gray-800 leading-relaxed serif mb-12">${bldg.description}</p>
                         
-                        <!-- Simulated Ad Space inside article -->
-                        <div class="my-12 p-8 border border-dashed border-gray-300 bg-gray-50 rounded-xl flex items-center gap-6">
-                            <div class="w-16 h-16 bg-black text-white rounded-full flex items-center justify-center flex-shrink-0"><i data-lucide="book-open" class="w-8 h-8"></i></div>
+                        <div class="p-8 border border-gray-200 bg-gray-50 rounded-2xl flex flex-col md:flex-row items-center gap-8 justify-between">
                             <div>
-                                <p class="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">Sponsored Educational Resource</p>
-                                <h4 class="font-bold text-lg mb-1">The Complete Monographs</h4>
-                                <p class="text-sm text-gray-500 mb-3">Access high-res floor plans and structural elevations of this building via our publishing partners.</p>
-                                <button class="text-xs font-bold uppercase tracking-widest text-blue-600 hover:text-black transition-colors">Access Library &rarr;</button>
+                                <h4 class="font-bold text-xl mb-2">Educator Pro Library</h4>
+                                <p class="text-sm text-gray-500 mb-4 max-w-md">Access verified floor plans, cross-sections, and material stress analyses for this structure.</p>
+                                <button onclick="openModal('modal-pro')" class="text-xs font-bold uppercase tracking-widest text-blue-600 hover:text-black border border-blue-600 px-6 py-2 rounded">Access Data</button>
                             </div>
+                            <i data-lucide="folder-lock" class="w-16 h-16 text-gray-300"></i>
                         </div>
                     </div>
                     
-                    <!-- Technical Sidebar -->
+                    <!-- Sidebar -->
                     <div class="md:col-span-4">
                         <div class="bg-slate-50 border border-slate-200 rounded-2xl p-8 sticky top-24">
-                            <h3 class="text-xs font-bold uppercase tracking-[0.2em] text-black mb-6">Technical Data</h3>
-                            
+                            <h3 class="text-xs font-bold uppercase tracking-[0.2em] text-black mb-8">Technical Data</h3>
                             <div class="space-y-6">
-                                <div>
-                                    <p class="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">Completion Year</p>
-                                    <p class="font-bold text-lg">${bldg.year}</p>
-                                </div>
-                                <div>
-                                    <p class="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">Primary Location</p>
-                                    <p class="font-medium text-sm flex items-start gap-2"><i data-lucide="map-pin" class="w-4 h-4 text-blue-600 mt-0.5"></i> ${bldg.location}, ${bldg.country}</p>
-                                </div>
-                                <div>
-                                    <p class="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">Geographic Coordinates</p>
-                                    <p class="font-medium text-sm font-mono text-gray-600">${bldg.lat.toFixed(4)}, ${bldg.lng.toFixed(4)}</p>
-                                </div>
-                                <div>
-                                    <p class="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">Structural Materials</p>
-                                    <p class="font-medium text-sm text-gray-800 leading-relaxed">${bldg.materials}</p>
-                                </div>
+                                <div><p class="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">Year</p><p class="font-bold text-lg">${bldg.year}</p></div>
+                                <div><p class="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">Location</p><p class="font-medium text-sm flex items-start gap-2"><i data-lucide="map-pin" class="w-4 h-4 text-blue-600 mt-0.5"></i> ${bldg.location}, ${bldg.country}</p></div>
+                                <div><p class="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">Coordinates</p><p class="font-medium text-sm font-mono text-gray-600">${bldg.lat.toFixed(4)}, ${bldg.lng.toFixed(4)}</p></div>
+                                <div><p class="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">Materials</p><p class="font-medium text-sm text-gray-800 leading-relaxed">${bldg.materials}</p></div>
                             </div>
-                            
-                            <button class="w-full mt-8 bg-black text-white py-3 rounded-lg text-xs font-bold uppercase tracking-widest hover:bg-gray-800 transition-colors shadow-lg shadow-black/20">
-                                View 3D Model
+                            <button onclick="launch3DViewer('${bldg.id}')" class="w-full mt-10 bg-black text-white py-4 rounded-xl text-xs font-bold uppercase tracking-widest hover:bg-gray-800 transition-colors shadow-xl flex justify-center items-center gap-2">
+                                <i data-lucide="box" class="w-4 h-4"></i> View 3D Model
                             </button>
                         </div>
                     </div>
                 </div>
             `;
             
-            document.getElementById('detail-content').innerHTML = detailHTML;
-            switchView('view-detail');
-            lucide.createIcons(); // Initialize icons in the new injected HTML
+            document.getElementById('detail-content').innerHTML = html;
+            navigate('view-detail');
+            lucide.createIcons();
         }
 
-        // --- 7. BOOT UP ---
-        applyFilters(); // Renders map and grid based on initial data
+        // -----------------------------------------
+        // 7. MODALS & 3D VIEWER LOGIC
+        // -----------------------------------------
+        function openModal(id) {
+            document.getElementById(id).classList.add('active');
+        }
+
+        function closeModal(id) {
+            document.getElementById(id).classList.remove('active');
+        }
+
+        function launch3DViewer(id) {
+            const bldg = buildings.find(b => b.id === id);
+            document.getElementById('3d-title').innerText = `${bldg.name} - Wireframe Analysis`;
+            document.getElementById('3d-image').src = bldg.blueprint;
+            openModal('modal-3d');
+        }
+
+        // Close Modals on Esc key
+        document.addEventListener('keydown', (e) => {
+            if(e.key === 'Escape') {
+                document.querySelectorAll('.modal-overlay').forEach(m => m.classList.remove('active'));
+            }
+        });
+
+        // -----------------------------------------
+        // 8. SYSTEM INITIALIZATION
+        // -----------------------------------------
+        function init() {
+            renderMapFiltersUI();
+            applyMapFilters(); // Draws initial map pins
+            renderDatabaseGrid();
+            renderArchitects();
+            renderCollections();
+            lucide.createIcons();
+        }
+
+        window.onload = init;
 
     </script>
 </body>
