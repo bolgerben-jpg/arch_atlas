@@ -4,351 +4,441 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>ArchAtlas | The Global Architecture Discovery Platform</title>
+    
+    <!-- Core Libraries -->
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/lucide@latest"></script>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    
+    <!-- Premium Typography -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,700;1,6..72,400;1,6..72,700&family=Outfit:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,600;1,6..72,400&family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
     <style>
-        body { font-family: 'Outfit', sans-serif; background-color: #FAFAFA; color: #171717; }
+        /* Base Styling */
+        body { font-family: 'Outfit', sans-serif; background-color: #FAFAFA; color: #171717; overflow-x: hidden; scroll-behavior: smooth; }
         .serif { font-family: 'Newsreader', serif; }
         
-        /* Map UI Styles */
-        .map-bg {
-            background-image: url('https://images.unsplash.com/photo-1477959858617-67f85cf4f1df?q=80&w=2613&auto=format&fit=crop'); /* Aerial Chicago view */
-            background-size: cover;
-            background-position: center;
-        }
-        
-        /* Technical Details */
-        .blueprint-bg {
-            background-color: #171717;
-            background-image: radial-gradient(rgba(255, 255, 255, 0.15) 1px, transparent 1px);
-            background-size: 24px 24px;
-        }
-        
-        /* Custom Scrollbar */
-        ::-webkit-scrollbar { width: 8px; }
-        ::-webkit-scrollbar-track { background: #f1f1f1; }
-        ::-webkit-scrollbar-thumb { background: #d4d4d4; border-radius: 4px; }
-        ::-webkit-scrollbar-thumb:hover { background: #a3a3a3; }
+        /* Map UI Overrides for Premium Look */
+        #map { width: 100%; height: 100%; z-index: 10; background: #e5e5e5; }
+        .leaflet-popup-content-wrapper { border-radius: 12px; padding: 0; overflow: hidden; box-shadow: 0 20px 40px rgba(0,0,0,0.15); border: 1px solid rgba(0,0,0,0.05); }
+        .leaflet-popup-content { margin: 0; width: 280px !important; }
+        .leaflet-popup-tip-container { display: none; } /* Hide the default map pointer for a cleaner floating card look */
+        .leaflet-control-zoom { border: none !important; box-shadow: 0 10px 20px rgba(0,0,0,0.1) !important; }
+        .leaflet-control-zoom a { color: #171717 !important; background: rgba(255,255,255,0.9) !important; backdrop-filter: blur(8px); border: none !important; }
 
-        /* Premium Ad Tags */
-        .ad-badge { 
-            position: absolute; top: 0; left: 0; 
-            background: rgba(0,0,0,0.8); color: white; 
-            font-size: 9px; text-transform: uppercase; 
-            letter-spacing: 0.1em; padding: 4px 8px; font-weight: 700; 
-            z-index: 10;
-        }
+        /* Glassmorphism Panels */
+        .glass-panel { background: rgba(255, 255, 255, 0.85); backdrop-filter: blur(16px); border: 1px solid rgba(255,255,255,0.5); }
+        .dark-glass { background: rgba(15, 23, 42, 0.85); backdrop-filter: blur(16px); border: 1px solid rgba(255,255,255,0.1); }
+        
+        /* SPA View Transitions */
+        .view-section { display: none; opacity: 0; transition: opacity 0.3s ease-in-out; }
+        .view-section.active { display: block; opacity: 1; animation: slideUp 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
+        @keyframes slideUp { 0% { opacity: 0; transform: translateY(15px); } 100% { opacity: 1; transform: translateY(0); } }
+
+        /* Custom Range Slider */
+        input[type=range] { -webkit-appearance: none; background: transparent; width: 100%; }
+        input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; height: 16px; width: 16px; border-radius: 50%; background: #000; cursor: pointer; margin-top: -6px; box-shadow: 0 0 0 4px rgba(255,255,255,0.8); transition: transform 0.1s; }
+        input[type=range]::-webkit-slider-thumb:hover { transform: scale(1.2); }
+        input[type=range]::-webkit-slider-runnable-track { width: 100%; height: 4px; cursor: pointer; background: #cbd5e1; border-radius: 2px; }
+
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
+        ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
     </style>
 </head>
-<body class="antialiased">
+<body class="h-screen flex flex-col overflow-hidden">
 
-    <!-- GLOBAL TOP BANNER AD (PREMIUM PLACEMENT) -->
-    <div class="w-full bg-[#171717] text-white flex justify-center items-center py-3 relative overflow-hidden group cursor-pointer">
-        <span class="absolute left-4 top-1/2 -translate-y-1/2 text-[9px] uppercase tracking-widest text-white/50 font-bold border border-white/20 px-2 py-0.5">Sponsored</span>
-        <p class="text-xs font-medium tracking-wide flex items-center gap-3">
-            <i data-lucide="monitor" class="w-4 h-4 text-emerald-400"></i>
-            Autodesk Revit 2027 Pro is here. Build the future with AI-assisted structural analysis.
-            <span class="underline underline-offset-4 decoration-emerald-400 font-bold group-hover:text-emerald-400 transition-colors">Learn More</span>
-        </p>
+    <!-- GLOBAL TOP BANNER -->
+    <div class="hidden md:flex w-full bg-slate-900 text-white justify-center items-center py-2 relative z-50 text-[11px] font-medium tracking-wide">
+        <span class="bg-blue-600 text-white px-2 py-0.5 rounded-sm uppercase font-bold tracking-widest text-[9px] mr-3">Pro Feature</span>
+        ArchAtlas Educator Pro is now live. Overlay topological constraints and climate data directly on the map. <a href="#" class="ml-2 underline hover:text-blue-400">Upgrade your institution.</a>
     </div>
 
     <!-- MAIN NAVIGATION -->
-    <nav class="bg-white/90 backdrop-blur-xl border-b border-gray-200 sticky top-0 z-50">
-        <div class="max-w-[1600px] mx-auto px-6 h-16 flex justify-between items-center">
-            <div class="flex items-center gap-3">
-                <div class="w-8 h-8 bg-black text-white flex items-center justify-center rounded-sm">
+    <nav class="bg-white/90 backdrop-blur-md border-b border-gray-200 z-50 relative shrink-0">
+        <div class="max-w-[1800px] mx-auto px-6 h-16 flex justify-between items-center">
+            <div class="flex items-center gap-3 cursor-pointer" onclick="switchView('view-map')">
+                <div class="w-8 h-8 bg-black text-white flex items-center justify-center rounded shadow-md">
                     <i data-lucide="map" class="w-4 h-4"></i>
                 </div>
-                <span class="text-xl font-bold tracking-tight uppercase">ArchAtlas</span>
+                <span class="text-xl font-bold tracking-tighter uppercase">ArchAtlas</span>
             </div>
             
-            <div class="hidden lg:flex gap-8 text-[12px] font-bold uppercase tracking-[0.15em] text-gray-500">
-                <a href="#" class="text-black hover:text-blue-600 transition-colors">The Map</a>
-                <a href="#" class="hover:text-black transition-colors">Movements</a>
-                <a href="#" class="hover:text-black transition-colors">Architects</a>
-                <a href="#" class="hover:text-black transition-colors">Curated Collections</a>
+            <div class="hidden lg:flex gap-10 text-[11px] font-bold uppercase tracking-[0.2em] text-gray-500">
+                <button onclick="switchView('view-map')" id="nav-map" class="text-black transition-colors">Global Map</button>
+                <button onclick="switchView('view-grid')" id="nav-grid" class="hover:text-black transition-colors">The Database</button>
+                <button onclick="alert('Architect Directory coming in V2!')" class="hover:text-black transition-colors">Architects</button>
             </div>
 
-            <div class="flex items-center gap-5">
-                <button class="text-gray-400 hover:text-black transition-colors"><i data-lucide="search" class="w-5 h-5"></i></button>
-                <button class="text-gray-400 hover:text-black transition-colors"><i data-lucide="bookmark" class="w-5 h-5"></i></button>
-                <div class="w-px h-6 bg-gray-200 mx-2"></div>
-                <button class="text-[12px] font-bold uppercase tracking-widest hover:text-blue-600 transition-colors">Sign In</button>
+            <div class="flex items-center gap-4">
+                <button class="text-gray-400 hover:text-black"><i data-lucide="search" class="w-5 h-5"></i></button>
+                <div class="w-px h-5 bg-gray-300 mx-2 hidden md:block"></div>
+                <button class="text-[11px] bg-black text-white px-5 py-2 font-bold uppercase tracking-widest rounded-sm hover:bg-gray-800 transition-colors shadow-lg">Sign In</button>
             </div>
         </div>
     </nav>
 
-    <!-- APP HERO: INTERACTIVE MAP INTERFACE SIMULATION -->
-    <main class="relative w-full h-[80vh] map-bg flex flex-col justify-between">
-        <!-- Map Overlay Gradient -->
-        <div class="absolute inset-0 bg-gradient-to-b from-black/60 via-black/20 to-black/80 pointer-events-none"></div>
+    <!-- VIEW 1: THE INTERACTIVE MAP -->
+    <main id="view-map" class="view-section active relative flex-grow w-full h-full">
+        <div id="map" class="absolute inset-0"></div>
 
-        <!-- Floating UI: Top Search & Filters -->
-        <div class="relative z-10 w-full max-w-3xl mx-auto mt-8 px-4">
-            <div class="bg-white rounded-lg shadow-2xl overflow-hidden flex items-center p-2">
-                <div class="pl-4 pr-3 text-gray-400"><i data-lucide="search" class="w-5 h-5"></i></div>
-                <input type="text" placeholder="Search buildings, cities, or architectural styles..." class="w-full py-3 outline-none text-black font-medium placeholder-gray-400 text-lg">
-                <div class="flex gap-2 pr-2">
-                    <button class="flex items-center gap-2 px-4 py-2 bg-gray-100 hover:bg-gray-200 rounded-md text-sm font-bold transition-colors">
-                        <i data-lucide="sliders-horizontal" class="w-4 h-4"></i> Filters
-                    </button>
-                    <button class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-md text-sm font-bold transition-colors shadow-lg shadow-blue-600/30">
-                        Explore
-                    </button>
+        <!-- Floating UI: Left Sidebar (Search & Filters) -->
+        <div class="absolute top-6 left-6 w-80 z-20 hidden md:flex flex-col gap-4">
+            <!-- Search Box -->
+            <div class="glass-panel p-4 rounded-xl shadow-xl">
+                <h3 class="text-xs font-bold uppercase tracking-widest text-gray-500 mb-3">Discovery Engine</h3>
+                <div class="relative">
+                    <i data-lucide="search" class="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"></i>
+                    <input type="text" id="searchInput" placeholder="Search structures..." class="w-full bg-white border border-gray-200 rounded-lg py-2.5 pl-10 pr-3 text-sm focus:outline-none focus:border-black transition-colors" onkeyup="if(event.key === 'Enter') applyFilters()">
+                </div>
+            </div>
+
+            <!-- Style Filters -->
+            <div class="glass-panel p-4 rounded-xl shadow-xl">
+                <h3 class="text-xs font-bold uppercase tracking-widest text-gray-500 mb-3">Architectural Style</h3>
+                <div class="flex flex-wrap gap-2">
+                    <button onclick="setFilterStyle('All')" class="filter-btn active bg-black text-white px-3 py-1.5 rounded-md text-[10px] font-bold uppercase tracking-wider transition-colors">All</button>
+                    <button onclick="setFilterStyle('Modernism')" class="filter-btn bg-gray-100 text-gray-600 hover:bg-gray-200 px-3 py-1.5 rounded-md text-[10px] font-bold uppercase tracking-wider transition-colors">Modernism</button>
+                    <button onclick="setFilterStyle('Antiquity')" class="filter-btn bg-gray-100 text-gray-600 hover:bg-gray-200 px-3 py-1.5 rounded-md text-[10px] font-bold uppercase tracking-wider transition-colors">Antiquity</button>
+                    <button onclick="setFilterStyle('Gothic')" class="filter-btn bg-gray-100 text-gray-600 hover:bg-gray-200 px-3 py-1.5 rounded-md text-[10px] font-bold uppercase tracking-wider transition-colors">Gothic</button>
+                    <button onclick="setFilterStyle('Parametric')" class="filter-btn bg-gray-100 text-gray-600 hover:bg-gray-200 px-3 py-1.5 rounded-md text-[10px] font-bold uppercase tracking-wider transition-colors">Parametric</button>
                 </div>
             </div>
             
-            <!-- Quick Tag Filters -->
-            <div class="flex gap-2 mt-4 justify-center">
-                <span class="px-4 py-1.5 bg-white/20 backdrop-blur-md text-white border border-white/30 rounded-full text-xs font-bold tracking-wide uppercase cursor-pointer hover:bg-white hover:text-black transition-colors">Brutalism</span>
-                <span class="px-4 py-1.5 bg-white/20 backdrop-blur-md text-white border border-white/30 rounded-full text-xs font-bold tracking-wide uppercase cursor-pointer hover:bg-white hover:text-black transition-colors">Gothic Revival</span>
-                <span class="px-4 py-1.5 bg-white/20 backdrop-blur-md text-white border border-white/30 rounded-full text-xs font-bold tracking-wide uppercase cursor-pointer hover:bg-white hover:text-black transition-colors">Zaha Hadid</span>
-            </div>
+            <div class="text-xs text-gray-500 font-medium ml-1">Showing <span id="resultCount" class="font-bold text-black">0</span> structures.</div>
         </div>
 
-        <!-- Floating UI: Map Controls (Right Side) -->
-        <div class="absolute right-6 top-1/2 -translate-y-1/2 flex flex-col gap-2 z-10">
-            <div class="bg-white/90 backdrop-blur-md shadow-xl rounded-md overflow-hidden flex flex-col border border-white/20">
-                <button class="p-3 hover:bg-gray-100 border-b border-gray-200"><i data-lucide="plus" class="w-5 h-5"></i></button>
-                <button class="p-3 hover:bg-gray-100"><i data-lucide="minus" class="w-5 h-5"></i></button>
-            </div>
-            <button class="bg-white/90 backdrop-blur-md shadow-xl p-3 rounded-md hover:bg-gray-100 border border-white/20 mt-2">
-                <i data-lucide="layers" class="w-5 h-5"></i>
-            </button>
-            <button class="bg-blue-600 text-white shadow-xl shadow-blue-600/30 p-3 rounded-md hover:bg-blue-700 mt-2">
-                <i data-lucide="navigation" class="w-5 h-5 fill-current"></i>
-            </button>
-        </div>
-
-        <!-- Floating UI: Bottom Timeline & Data Insight -->
-        <div class="relative z-10 w-full max-w-[1600px] mx-auto px-6 pb-8 flex items-end justify-between">
-            <div class="text-white max-w-lg">
-                <span class="px-3 py-1 bg-blue-600 text-[10px] font-bold uppercase tracking-widest mb-3 inline-block rounded-sm">Current View</span>
-                <h1 class="serif text-5xl mb-2 text-shadow-sm">The Chicago School</h1>
-                <p class="text-white/80 text-sm font-medium leading-relaxed mb-4">Pioneering the commercial skyscraper. Innovations in steel-frame construction following the Great Fire of 1871 revolutionized urban skylines globally.</p>
-                <button class="text-xs font-bold uppercase tracking-widest flex items-center gap-2 hover:text-blue-400 transition-colors">
-                    Read the architectural history <i data-lucide="arrow-right" class="w-4 h-4"></i>
-                </button>
-            </div>
-
-            <!-- Simulated Timeline Slider -->
-            <div class="bg-black/60 backdrop-blur-xl border border-white/10 p-5 rounded-xl w-[600px]">
-                <div class="flex justify-between text-[10px] font-bold text-white/50 uppercase tracking-widest mb-3">
-                    <span>1800</span>
-                    <span class="text-white">1871 (Fire)</span>
-                    <span>1900</span>
-                    <span>1950</span>
-                    <span>2000+</span>
+        <!-- Floating UI: Bottom Timeline -->
+        <div class="absolute bottom-8 left-1/2 -translate-x-1/2 w-[90%] max-w-4xl z-20">
+            <div class="dark-glass p-5 rounded-2xl shadow-2xl text-white">
+                <div class="flex justify-between items-end mb-4">
+                    <div>
+                        <span class="text-[9px] font-bold uppercase tracking-[0.2em] text-blue-400">Chronological Filter</span>
+                        <h3 class="serif text-2xl mt-1">Structures built up to: <span id="yearDisplay" class="font-bold">2026</span></h3>
+                    </div>
                 </div>
-                <div class="relative w-full h-1 bg-white/20 rounded-full">
-                    <div class="absolute left-[20%] right-[40%] h-full bg-blue-500 rounded-full"></div>
-                    <div class="absolute left-[60%] top-1/2 -translate-y-1/2 w-4 h-4 bg-white rounded-full shadow-[0_0_10px_rgba(255,255,255,0.5)] cursor-pointer"></div>
+                <input type="range" id="timeSlider" min="0" max="2026" value="2026" class="w-full" oninput="updateTimeline(this.value)">
+                <div class="flex justify-between text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-3">
+                    <span>Antiquity (0)</span>
+                    <span>Renaissance (1500)</span>
+                    <span>Industrial (1850)</span>
+                    <span>Modern (1950)</span>
+                    <span>Today</span>
                 </div>
-                <div class="text-center mt-3 text-xs text-white/80 font-medium">Dragging timeline reveals structural progression over decades.</div>
             </div>
         </div>
     </main>
 
-    <!-- DISCOVERY ENGINE / RECOMMENDATIONS SECTION -->
-    <section class="max-w-[1600px] mx-auto px-6 py-24">
-        <div class="flex justify-between items-end mb-12">
-            <div>
-                <span class="text-blue-600 text-xs font-bold uppercase tracking-[0.15em]">ArchAtlas AI Recommender</span>
-                <h2 class="serif text-4xl mt-2 text-black">Because you studied Organic Modernism</h2>
-                <p class="text-gray-500 mt-2 text-lg">Structures blending human habitation with the natural world.</p>
-            </div>
-            <a href="#" class="text-sm font-bold uppercase tracking-widest border-b-2 border-black pb-1 hover:text-blue-600 hover:border-blue-600 transition-all">View Full Node Map</a>
-        </div>
-
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
-            
-            <!-- Accurate Photo: Fallingwater -->
-            <a href="#" class="group block relative bg-white border border-gray-200 rounded-xl overflow-hidden shadow-sm hover:shadow-xl transition-all duration-300">
-                <div class="aspect-[4/3] overflow-hidden relative">
-                    <img src="https://images.unsplash.com/photo-1575517111839-3a3843ee7f5d?q=80&w=800&auto=format&fit=crop" alt="Fallingwater" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700">
-                    <div class="absolute top-3 right-3 bg-white/90 backdrop-blur-sm px-2 py-1 rounded text-[10px] font-bold tracking-widest uppercase">1935</div>
+    <!-- VIEW 2: THE DATABASE GRID -->
+    <main id="view-grid" class="view-section flex-grow bg-[#FAFAFA] overflow-y-auto h-full">
+        <div class="max-w-[1600px] mx-auto px-6 py-16">
+            <div class="border-b border-black pb-6 mb-12 flex flex-col md:flex-row justify-between items-end gap-6">
+                <div>
+                    <h2 class="serif text-5xl mb-3">The Architectural Record</h2>
+                    <p class="text-gray-500 max-w-xl text-lg">A comprehensive, curated database of the structures that defined human history, engineering, and culture.</p>
                 </div>
-                <div class="p-5">
-                    <h3 class="text-xl font-bold mb-1 group-hover:text-blue-600 transition-colors">Fallingwater</h3>
-                    <p class="text-sm text-gray-500 mb-4">Frank Lloyd Wright • Pennsylvania</p>
-                    <div class="flex items-center gap-2 text-xs font-medium text-gray-400">
-                        <i data-lucide="git-branch" class="w-4 h-4 text-blue-500"></i> Match: Cantilevered Terraces
-                    </div>
-                </div>
-            </a>
-
-            <!-- Accurate Photo: Sydney Opera House (Organic expressionism) -->
-            <a href="#" class="group block relative bg-white border border-gray-200 rounded-xl overflow-hidden shadow-sm hover:shadow-xl transition-all duration-300">
-                <div class="aspect-[4/3] overflow-hidden relative">
-                    <img src="https://images.unsplash.com/photo-1624138784614-87fd1b6528f8?q=80&w=800&auto=format&fit=crop" alt="Sydney Opera House" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700">
-                    <div class="absolute top-3 right-3 bg-white/90 backdrop-blur-sm px-2 py-1 rounded text-[10px] font-bold tracking-widest uppercase">1973</div>
-                </div>
-                <div class="p-5">
-                    <h3 class="text-xl font-bold mb-1 group-hover:text-blue-600 transition-colors">Sydney Opera House</h3>
-                    <p class="text-sm text-gray-500 mb-4">Jørn Utzon • Australia</p>
-                    <div class="flex items-center gap-2 text-xs font-medium text-gray-400">
-                        <i data-lucide="git-branch" class="w-4 h-4 text-blue-500"></i> Match: Biomimetic Shell Form
-                    </div>
-                </div>
-            </a>
-
-            <!-- Accurate Photo: Solomon R. Guggenheim Museum -->
-            <a href="#" class="group block relative bg-white border border-gray-200 rounded-xl overflow-hidden shadow-sm hover:shadow-xl transition-all duration-300">
-                <div class="aspect-[4/3] overflow-hidden relative">
-                    <img src="https://images.unsplash.com/photo-1555505012-40149026402d?q=80&w=800&auto=format&fit=crop" alt="Guggenheim Museum" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700">
-                    <div class="absolute top-3 right-3 bg-white/90 backdrop-blur-sm px-2 py-1 rounded text-[10px] font-bold tracking-widest uppercase">1959</div>
-                </div>
-                <div class="p-5">
-                    <h3 class="text-xl font-bold mb-1 group-hover:text-blue-600 transition-colors">Guggenheim Museum</h3>
-                    <p class="text-sm text-gray-500 mb-4">Frank Lloyd Wright • New York</p>
-                    <div class="flex items-center gap-2 text-xs font-medium text-gray-400">
-                        <i data-lucide="git-branch" class="w-4 h-4 text-blue-500"></i> Match: Continuous Spatial Spiral
-                    </div>
-                </div>
-            </a>
-
-            <!-- NATIVE IN-FEED ADVERTISEMENT -->
-            <div class="relative bg-blue-50 border border-blue-100 rounded-xl overflow-hidden p-6 flex flex-col justify-between group cursor-pointer hover:shadow-lg transition-all duration-300">
-                <span class="ad-badge">Presented by Herman Miller</span>
-                <div class="mt-4">
-                    <div class="w-12 h-12 bg-blue-600 rounded-full flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
-                        <i data-lucide="armchair" class="w-6 h-6 text-white"></i>
-                    </div>
-                    <h3 class="serif text-2xl mb-2 text-blue-950">Furnishing Modernity</h3>
-                    <p class="text-sm text-blue-800/80 mb-6 leading-relaxed">Explore how mid-century interior design evolved alongside architectural breakthroughs in the 1950s.</p>
-                </div>
-                <button class="w-full bg-white text-blue-900 border border-blue-200 py-3 rounded-lg text-xs font-bold uppercase tracking-widest hover:bg-blue-600 hover:text-white hover:border-blue-600 transition-colors">
-                    Read the Editorial
+                <button onclick="switchView('view-map')" class="flex items-center gap-2 text-xs font-bold uppercase tracking-widest hover:text-blue-600 transition-colors">
+                    <i data-lucide="map" class="w-4 h-4"></i> Return to Map
                 </button>
             </div>
-
-        </div>
-    </section>
-
-    <!-- TECHNICAL ANALYSIS SECTION (Dark UI) -->
-    <section class="blueprint-bg text-white py-24 border-y border-white/10">
-        <div class="max-w-[1600px] mx-auto px-6 grid lg:grid-cols-12 gap-16 items-center">
-            
-            <div class="lg:col-span-5">
-                <div class="flex items-center gap-3 mb-6">
-                    <div class="w-2 h-2 bg-emerald-400 rounded-full animate-pulse"></div>
-                    <span class="text-emerald-400 text-xs font-bold uppercase tracking-[0.15em]">Pro Data Layer Active</span>
-                </div>
-                <h2 class="serif text-5xl mb-6">Structural Cross-Sectioning.</h2>
-                <p class="text-gray-400 text-lg leading-relaxed mb-8">
-                    Go beyond the facade. ArchAtlas maps construction methodologies across millennia. Compare the load-bearing logic of <span class="text-white font-medium">The Pantheon’s</span> unreinforced concrete dome directly against modern tensile structures.
-                </p>
-                
-                <ul class="space-y-5 mb-10">
-                    <li class="flex items-start gap-4">
-                        <div class="bg-white/10 p-2 rounded"><i data-lucide="ruler" class="w-5 h-5"></i></div>
-                        <div>
-                            <h4 class="font-bold text-sm uppercase tracking-wide">Dimension Extraction</h4>
-                            <p class="text-sm text-gray-500 mt-1">Scale comparisons across global landmarks.</p>
-                        </div>
-                    </li>
-                    <li class="flex items-start gap-4">
-                        <div class="bg-white/10 p-2 rounded"><i data-lucide="box" class="w-5 h-5"></i></div>
-                        <div>
-                            <h4 class="font-bold text-sm uppercase tracking-wide">Material Footprint</h4>
-                            <p class="text-sm text-gray-500 mt-1">Historical analytics of masonry vs. modern steel.</p>
-                        </div>
-                    </li>
-                </ul>
-
-                <button class="bg-white text-black px-8 py-4 rounded-md text-sm font-bold uppercase tracking-widest hover:bg-gray-200 transition-colors shadow-[0_0_20px_rgba(255,255,255,0.2)]">
-                    Upgrade to Educator Pro
-                </button>
-            </div>
-
-            <div class="lg:col-span-7 grid grid-cols-2 gap-4">
-                <!-- Accurate Photo: Pantheon Interior/Dome -->
-                <div class="relative rounded-xl overflow-hidden border border-white/20 aspect-[4/5] group">
-                    <img src="https://images.unsplash.com/photo-1542301197-10492801488c?q=80&w=800&auto=format&fit=crop" alt="Pantheon Oculus" class="w-full h-full object-cover opacity-60 group-hover:opacity-100 transition-opacity duration-500">
-                    <div class="absolute bottom-0 left-0 right-0 p-4 bg-gradient-to-t from-black to-transparent">
-                        <p class="text-[10px] font-bold uppercase tracking-widest text-emerald-400">126 AD</p>
-                        <p class="font-medium text-sm">Roman Unreinforced Concrete</p>
-                    </div>
-                </div>
-                <!-- Accurate Photo: Sagrada Familia Vaults -->
-                <div class="relative rounded-xl overflow-hidden border border-white/20 aspect-[4/5] mt-12 group">
-                    <img src="https://images.unsplash.com/photo-1583778175782-d1d494957d66?q=80&w=800&auto=format&fit=crop" alt="Sagrada Familia Vaults" class="w-full h-full object-cover opacity-60 group-hover:opacity-100 transition-opacity duration-500">
-                    <div class="absolute bottom-0 left-0 right-0 p-4 bg-gradient-to-t from-black to-transparent">
-                        <p class="text-[10px] font-bold uppercase tracking-widest text-emerald-400">1882+</p>
-                        <p class="font-medium text-sm">Catenary Arch Vaulting</p>
-                    </div>
-                </div>
-            </div>
-
-        </div>
-    </section>
-
-    <!-- FOOTER -->
-    <footer class="bg-white pt-24 pb-12 border-t border-gray-200">
-        <div class="max-w-[1600px] mx-auto px-6">
-            <div class="grid grid-cols-1 md:grid-cols-4 gap-12 mb-16">
-                <div class="md:col-span-1">
-                    <div class="flex items-center gap-3 mb-6">
-                        <div class="w-8 h-8 bg-black text-white flex items-center justify-center rounded-sm">
-                            <i data-lucide="map" class="w-4 h-4"></i>
-                        </div>
-                        <span class="text-xl font-bold tracking-tight uppercase">ArchAtlas</span>
-                    </div>
-                    <p class="text-sm text-gray-500 leading-relaxed mb-6">The definitive digital platform for architectural discovery, education, and spatial history.</p>
-                    <div class="flex gap-4">
-                        <button class="w-10 h-10 rounded-full border border-gray-300 flex items-center justify-center hover:bg-black hover:text-white transition-colors"><i data-lucide="twitter" class="w-4 h-4"></i></button>
-                        <button class="w-10 h-10 rounded-full border border-gray-300 flex items-center justify-center hover:bg-black hover:text-white transition-colors"><i data-lucide="instagram" class="w-4 h-4"></i></button>
-                        <button class="w-10 h-10 rounded-full border border-gray-300 flex items-center justify-center hover:bg-black hover:text-white transition-colors"><i data-lucide="linkedin" class="w-4 h-4"></i></button>
-                    </div>
-                </div>
-                
-                <div>
-                    <h5 class="text-xs font-bold uppercase tracking-widest mb-6">Explore</h5>
-                    <ul class="space-y-4 text-sm text-gray-600 font-medium">
-                        <li><a href="#" class="hover:text-blue-600 transition-colors">The Global Map</a></li>
-                        <li><a href="#" class="hover:text-blue-600 transition-colors">Era Timelines</a></li>
-                        <li><a href="#" class="hover:text-blue-600 transition-colors">Architect Directory</a></li>
-                        <li><a href="#" class="hover:text-blue-600 transition-colors">Curated Collections</a></li>
-                    </ul>
-                </div>
-
-                <div>
-                    <h5 class="text-xs font-bold uppercase tracking-widest mb-6">Platform</h5>
-                    <ul class="space-y-4 text-sm text-gray-600 font-medium">
-                        <li><a href="#" class="hover:text-blue-600 transition-colors">API Documentation</a></li>
-                        <li><a href="#" class="hover:text-blue-600 transition-colors">For Educators</a></li>
-                        <li><a href="#" class="hover:text-blue-600 transition-colors">Contribute Data</a></li>
-                        <li><a href="#" class="hover:text-blue-600 transition-colors flex items-center gap-2">Advertise with us <span class="bg-blue-100 text-blue-600 px-2 py-0.5 rounded text-[9px] uppercase tracking-wider">Premium</span></a></li>
-                    </ul>
-                </div>
-
-                <div>
-                    <h5 class="text-xs font-bold uppercase tracking-widest mb-6">Newsletter</h5>
-                    <p class="text-sm text-gray-500 mb-4">A weekly curation of architectural history and platform updates.</p>
-                    <div class="flex">
-                        <input type="email" placeholder="Your email address" class="w-full bg-gray-50 border border-gray-200 px-4 py-3 text-sm rounded-l-md outline-none focus:border-blue-500">
-                        <button class="bg-black text-white px-5 rounded-r-md hover:bg-gray-800 transition-colors"><i data-lucide="arrow-right" class="w-4 h-4"></i></button>
-                    </div>
-                </div>
-            </div>
-
-            <div class="border-t border-gray-200 pt-8 flex flex-col md:flex-row justify-between items-center gap-4 text-xs text-gray-400 font-medium uppercase tracking-wider">
-                <p>&copy; 2026 ArchAtlas Technologies Inc.</p>
-                <div class="flex gap-6">
-                    <a href="#" class="hover:text-gray-900">Privacy Policy</a>
-                    <a href="#" class="hover:text-gray-900">Terms of Service</a>
-                    <a href="#" class="hover:text-gray-900">Cookie Settings</a>
-                </div>
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8" id="database-grid">
+                <!-- Javascript will inject cards here -->
             </div>
         </div>
-    </footer>
+    </main>
+
+    <!-- VIEW 3: IN-DEPTH BUILDING DETAIL (Editorial Page) -->
+    <main id="view-detail" class="view-section flex-grow bg-white overflow-y-auto h-full absolute inset-0 z-[60]">
+        <!-- Nav override for detail page -->
+        <div class="sticky top-0 w-full bg-white/90 backdrop-blur-md border-b border-gray-100 px-6 py-4 flex justify-between items-center z-50">
+            <button onclick="switchView(lastView)" class="flex items-center gap-2 text-xs font-bold uppercase tracking-widest hover:text-blue-600 transition-colors">
+                <i data-lucide="arrow-left" class="w-4 h-4"></i> Back
+            </button>
+            <div class="flex gap-4">
+                <button class="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center hover:bg-gray-200"><i data-lucide="bookmark" class="w-4 h-4"></i></button>
+                <button class="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center hover:bg-gray-200"><i data-lucide="share" class="w-4 h-4"></i></button>
+            </div>
+        </div>
+
+        <div id="detail-content" class="pb-24">
+            <!-- Javascript will inject the editorial content here -->
+        </div>
+    </main>
 
     <script>
-        // Initialize Icons
+        // --- 1. INITIALIZE ICONS ---
         lucide.createIcons();
+
+        // --- 2. THE COMPREHENSIVE DATABASE ---
+        const buildings = [
+            {
+                id: "fallingwater", name: "Fallingwater", architect: "Frank Lloyd Wright", year: 1935, style: "Modernism",
+                lat: 39.9061, lng: -79.4678, country: "USA", location: "Mill Run, Pennsylvania",
+                img: "https://images.unsplash.com/photo-1575517111839-3a3843ee7f5d?q=80&w=1200&auto=format&fit=crop",
+                materials: "Native sandstone, reinforced concrete, glass, steel",
+                description: "Perhaps the most famous private residence in the world, Fallingwater redefined the relationship between man, architecture, and nature. Rather than placing the house to view the waterfall, Wright built the home directly over it, anchoring the concrete cantilevered trays into the existing bedrock. It stands as the ultimate masterpiece of Wright's philosophy of 'Organic Architecture'."
+            },
+            {
+                id: "pantheon", name: "The Pantheon", architect: "Apollodorus of Damascus (Debated)", year: 126, style: "Antiquity",
+                lat: 41.8986, lng: 12.4769, country: "Italy", location: "Rome",
+                img: "https://images.unsplash.com/photo-1542301197-10492801488c?q=80&w=1200&auto=format&fit=crop",
+                materials: "Roman concrete, tuff, pumice, brick, marble",
+                description: "Nearly two thousand years after it was built, the Pantheon's dome remains the largest unreinforced solid concrete dome in the world. Originally a Roman temple commissioned by Marcus Agrippa, its perfect proportions (the height to the oculus and the diameter of the interior circle are identical) have influenced classical architecture continuously since the Renaissance."
+            },
+            {
+                id: "guggenheim", name: "Solomon R. Guggenheim Museum", architect: "Frank Lloyd Wright", year: 1959, style: "Modernism",
+                lat: 40.7830, lng: -73.9590, country: "USA", location: "New York City, New York",
+                img: "https://images.unsplash.com/photo-1555505012-40149026402d?q=80&w=1200&auto=format&fit=crop",
+                materials: "Gunite (sprayed concrete), steel",
+                description: "Wright conceived the museum as a 'temple of the spirit'. The continuous spiral ramp defied the traditional room-by-room museum layout, allowing visitors to experience art in a fluid, unbroken journey. Its stark, organic white form stands in brilliant contrast to the rigid rectangular grid of Manhattan."
+            },
+            {
+                id: "sagrada", name: "Sagrada Família", architect: "Antoni Gaudí", year: 1882, style: "Modernisme",
+                lat: 41.4036, lng: 2.1744, country: "Spain", location: "Barcelona",
+                img: "https://images.unsplash.com/photo-1583778175782-d1d494957d66?q=80&w=1200&auto=format&fit=crop",
+                materials: "Montjuïc stone, granite, reinforced concrete",
+                description: "Gaudí’s unfinished magnum opus combines Gothic and curvilinear Art Nouveau forms with unprecedented structural engineering. Using weighted string models to calculate catenary arches, Gaudí designed columns that branch like trees to support the massive vaults, creating an interior that feels like a sacred, geometric forest."
+            },
+            {
+                id: "sydney", name: "Sydney Opera House", architect: "Jørn Utzon", year: 1973, style: "Expressionism",
+                lat: -33.8568, lng: 151.2153, country: "Australia", location: "Sydney, New South Wales",
+                img: "https://images.unsplash.com/photo-1624138784614-87fd1b6528f8?q=80&w=1200&auto=format&fit=crop",
+                materials: "Precast concrete panels, Swedish ceramic tiles",
+                description: "One of the 20th century's most iconic buildings, Utzon's design was so advanced that the engineering required to build its 'shells' hadn't been invented yet. The solution—deriving all the shells from the surface of a single imagined sphere—remains one of the greatest collaborations between architect and structural engineer (Ove Arup)."
+            },
+            {
+                id: "notre", name: "Notre-Dame de Paris", architect: "Maurice de Sully (Initiator)", year: 1345, style: "Gothic",
+                lat: 48.8529, lng: 2.3500, country: "France", location: "Paris",
+                img: "https://images.unsplash.com/photo-1478391679764-b2d8b3cd1e94?q=80&w=1200&auto=format&fit=crop",
+                materials: "Lutetian limestone, timber, lead, glass",
+                description: "Among the first buildings in the world to use the flying buttress. When the original nave walls began fracturing under the stress of the massive roof, the architects built exterior arched supports, allowing for walls composed almost entirely of intricate stained glass. It remains the gold standard of French Gothic architecture."
+            },
+            {
+                id: "burj", name: "Burj Khalifa", architect: "Adrian Smith (SOM)", year: 2010, style: "Neo-futurism",
+                lat: 25.1972, lng: 55.2744, country: "UAE", location: "Dubai",
+                img: "https://images.unsplash.com/photo-1597659840241-37e2b9c2f55f?q=80&w=1200&auto=format&fit=crop",
+                materials: "Reinforced concrete, aluminum, glass",
+                description: "Standing at 828 meters, it is the tallest structure ever built. Its structural system, the 'buttressed core,' was invented specifically for this building. The Y-shaped floor plan minimizes wind forces and prevents wind vortices from organizing, solving the primary challenge of supertall skyscraper engineering."
+            },
+            {
+                id: "disney", name: "Walt Disney Concert Hall", architect: "Frank Gehry", year: 2003, style: "Parametric",
+                lat: 34.0553, lng: -118.2498, country: "USA", location: "Los Angeles, California",
+                img: "https://images.unsplash.com/photo-1522068779951-e04f0f065360?q=80&w=1200&auto=format&fit=crop",
+                materials: "Stainless steel, Douglas fir, steel frame",
+                description: "A triumph of computer-aided design, Gehry used aerospace software (CATIA) to translate his sweeping, sculptural paper models into buildable structural steel. While the exterior is an explosion of metallic sails, the interior auditorium is an acoustically perfect, warm wooden chamber."
+            }
+        ];
+
+        // --- 3. STATE MANAGEMENT ---
+        let currentStyle = 'All';
+        let currentYear = 2026;
+        let lastView = 'view-map';
+
+        // --- 4. LEAFLET MAP SETUP ---
+        const map = L.map('map', { zoomControl: false }).setView([40, -30], 3);
+        L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
+            attribution: '&copy; OpenStreetMap & CartoDB'
+        }).addTo(map);
+        L.control.zoom({ position: 'topright' }).addTo(map);
+
+        let mapMarkers = [];
+
+        // --- 5. CORE LOGIC: FILTERING & RENDERING ---
+        function applyFilters() {
+            const query = document.getElementById('searchInput').value.toLowerCase();
+            
+            const filteredData = buildings.filter(b => {
+                const matchesSearch = b.name.toLowerCase().includes(query) || b.architect.toLowerCase().includes(query);
+                const matchesStyle = currentStyle === 'All' || b.style === currentStyle;
+                const matchesYear = b.year <= currentYear;
+                return matchesSearch && matchesStyle && matchesYear;
+            });
+
+            document.getElementById('resultCount').innerText = filteredData.length;
+            renderMap(filteredData);
+            renderGrid(filteredData);
+        }
+
+        function setFilterStyle(style) {
+            currentStyle = style;
+            // Update button UI
+            document.querySelectorAll('.filter-btn').forEach(btn => {
+                if(btn.innerText === style) {
+                    btn.className = "filter-btn active bg-black text-white px-3 py-1.5 rounded-md text-[10px] font-bold uppercase tracking-wider transition-colors";
+                } else {
+                    btn.className = "filter-btn bg-gray-100 text-gray-600 hover:bg-gray-200 px-3 py-1.5 rounded-md text-[10px] font-bold uppercase tracking-wider transition-colors";
+                }
+            });
+            applyFilters();
+        }
+
+        function updateTimeline(year) {
+            currentYear = year;
+            document.getElementById('yearDisplay').innerText = year;
+            applyFilters();
+        }
+
+        function renderMap(data) {
+            mapMarkers.forEach(marker => map.removeLayer(marker));
+            mapMarkers = [];
+
+            data.forEach(bldg => {
+                const popupHTML = `
+                    <div class="bg-white rounded-xl overflow-hidden flex flex-col group cursor-pointer" onclick="openDetail('${bldg.id}')">
+                        <div class="relative h-40 overflow-hidden">
+                            <img src="${bldg.img}" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" alt="${bldg.name}">
+                            <div class="absolute inset-0 bg-black/10 group-hover:bg-black/0 transition-colors"></div>
+                            <span class="absolute top-3 left-3 bg-white/90 backdrop-blur-sm px-2 py-1 rounded text-[9px] font-bold tracking-widest uppercase shadow-sm">${bldg.year}</span>
+                        </div>
+                        <div class="p-5">
+                            <span class="text-[9px] text-blue-600 uppercase font-bold tracking-widest mb-1 block">${bldg.style}</span>
+                            <h3 class="serif font-bold text-xl leading-tight mb-1 group-hover:text-blue-600 transition-colors">${bldg.name}</h3>
+                            <p class="text-xs text-gray-500 font-medium">${bldg.architect}</p>
+                            <div class="mt-4 pt-4 border-t border-gray-100 flex justify-between items-center text-xs font-bold uppercase tracking-wider text-black">
+                                Explore Record <i data-lucide="arrow-right" class="w-4 h-4"></i>
+                            </div>
+                        </div>
+                    </div>
+                `;
+
+                // Add pin
+                const marker = L.marker([bldg.lat, bldg.lng])
+                    .bindPopup(popupHTML, { offset: [0, -10] })
+                    .addTo(map);
+                mapMarkers.push(marker);
+            });
+        }
+
+        function renderGrid(data) {
+            const grid = document.getElementById('database-grid');
+            if (data.length === 0) {
+                grid.innerHTML = `<div class="col-span-full py-20 text-center text-gray-500 text-lg">No structures match the current temporal or stylistic filters.</div>`;
+                return;
+            }
+
+            grid.innerHTML = data.map(bldg => `
+                <div onclick="openDetail('${bldg.id}')" class="group cursor-pointer bg-white border border-gray-200 rounded-xl overflow-hidden hover:shadow-2xl hover:shadow-black/5 transition-all duration-300">
+                    <div class="relative aspect-[4/3] overflow-hidden">
+                        <img src="${bldg.img}" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700">
+                        <div class="absolute bottom-3 left-3 bg-black/80 text-white px-2 py-1 rounded text-[10px] font-bold tracking-widest uppercase">${bldg.year}</div>
+                    </div>
+                    <div class="p-6">
+                        <span class="text-[10px] font-bold tracking-widest uppercase text-blue-600 mb-2 block">${bldg.style}</span>
+                        <h3 class="serif text-2xl font-bold mb-1">${bldg.name}</h3>
+                        <p class="text-sm text-gray-500 mb-4">${bldg.architect}</p>
+                        <p class="text-xs font-medium text-gray-400 flex items-center gap-1.5"><i data-lucide="map-pin" class="w-3.5 h-3.5"></i> ${bldg.location}</p>
+                    </div>
+                </div>
+            `).join('');
+            
+            // Re-initialize icons for newly injected HTML
+            lucide.createIcons();
+        }
+
+        // --- 6. NAVIGATION & EDITORIAL PAGE LOGIC ---
+        function switchView(viewId) {
+            // Track where we came from if we aren't going to the detail page
+            if(viewId !== 'view-detail') lastView = viewId;
+
+            // Hide all
+            document.querySelectorAll('.view-section').forEach(el => el.classList.remove('active'));
+            document.getElementById('nav-map').classList.replace('text-black', 'text-gray-500');
+            document.getElementById('nav-grid').classList.replace('text-black', 'text-gray-500');
+            
+            // Show Target
+            document.getElementById(viewId).classList.add('active');
+            
+            // Nav Highlighting & Map Fix
+            if(viewId === 'view-map') {
+                document.getElementById('nav-map').classList.replace('text-gray-500', 'text-black');
+                setTimeout(() => map.invalidateSize(), 100); 
+            } else if (viewId === 'view-grid') {
+                document.getElementById('nav-grid').classList.replace('text-gray-500', 'text-black');
+            }
+            
+            window.scrollTo(0, 0);
+        }
+
+        function openDetail(id) {
+            const bldg = buildings.find(b => b.id === id);
+            if(!bldg) return;
+
+            const detailHTML = `
+                <!-- Hero Image -->
+                <div class="w-full h-[50vh] relative">
+                    <img src="${bldg.img}" class="w-full h-full object-cover" alt="${bldg.name}">
+                    <div class="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent"></div>
+                    <div class="absolute bottom-0 left-0 w-full p-8 md:p-16 max-w-[1200px] mx-auto text-white">
+                        <span class="bg-blue-600 text-white px-3 py-1.5 rounded text-[10px] font-bold tracking-widest uppercase mb-4 inline-block">${bldg.style}</span>
+                        <h1 class="serif text-5xl md:text-7xl font-bold mb-2">${bldg.name}</h1>
+                        <p class="text-lg md:text-xl text-white/80 font-medium flex items-center gap-2"><i data-lucide="user" class="w-5 h-5"></i> ${bldg.architect}</p>
+                    </div>
+                </div>
+
+                <!-- Editorial Content -->
+                <div class="max-w-[1200px] mx-auto px-6 py-16 grid md:grid-cols-12 gap-16">
+                    <!-- Main Essay -->
+                    <div class="md:col-span-8">
+                        <h2 class="text-xs font-bold uppercase tracking-[0.2em] text-gray-400 mb-6 border-b border-gray-200 pb-4">Architectural Significance</h2>
+                        <p class="text-xl md:text-2xl text-gray-800 leading-relaxed serif">${bldg.description}</p>
+                        
+                        <!-- Simulated Ad Space inside article -->
+                        <div class="my-12 p-8 border border-dashed border-gray-300 bg-gray-50 rounded-xl flex items-center gap-6">
+                            <div class="w-16 h-16 bg-black text-white rounded-full flex items-center justify-center flex-shrink-0"><i data-lucide="book-open" class="w-8 h-8"></i></div>
+                            <div>
+                                <p class="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">Sponsored Educational Resource</p>
+                                <h4 class="font-bold text-lg mb-1">The Complete Monographs</h4>
+                                <p class="text-sm text-gray-500 mb-3">Access high-res floor plans and structural elevations of this building via our publishing partners.</p>
+                                <button class="text-xs font-bold uppercase tracking-widest text-blue-600 hover:text-black transition-colors">Access Library &rarr;</button>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Technical Sidebar -->
+                    <div class="md:col-span-4">
+                        <div class="bg-slate-50 border border-slate-200 rounded-2xl p-8 sticky top-24">
+                            <h3 class="text-xs font-bold uppercase tracking-[0.2em] text-black mb-6">Technical Data</h3>
+                            
+                            <div class="space-y-6">
+                                <div>
+                                    <p class="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">Completion Year</p>
+                                    <p class="font-bold text-lg">${bldg.year}</p>
+                                </div>
+                                <div>
+                                    <p class="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">Primary Location</p>
+                                    <p class="font-medium text-sm flex items-start gap-2"><i data-lucide="map-pin" class="w-4 h-4 text-blue-600 mt-0.5"></i> ${bldg.location}, ${bldg.country}</p>
+                                </div>
+                                <div>
+                                    <p class="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">Geographic Coordinates</p>
+                                    <p class="font-medium text-sm font-mono text-gray-600">${bldg.lat.toFixed(4)}, ${bldg.lng.toFixed(4)}</p>
+                                </div>
+                                <div>
+                                    <p class="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">Structural Materials</p>
+                                    <p class="font-medium text-sm text-gray-800 leading-relaxed">${bldg.materials}</p>
+                                </div>
+                            </div>
+                            
+                            <button class="w-full mt-8 bg-black text-white py-3 rounded-lg text-xs font-bold uppercase tracking-widest hover:bg-gray-800 transition-colors shadow-lg shadow-black/20">
+                                View 3D Model
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            document.getElementById('detail-content').innerHTML = detailHTML;
+            switchView('view-detail');
+            lucide.createIcons(); // Initialize icons in the new injected HTML
+        }
+
+        // --- 7. BOOT UP ---
+        applyFilters(); // Renders map and grid based on initial data
+
     </script>
 </body>
 </html>
